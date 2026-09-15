@@ -1,0 +1,143 @@
+{
+  "name": "mm-plugin-perpl",
+  "version": "0.1.0",
+  "description": "Trade perpetuals on Perpl (Monad) from the MetaMask Agent Wallet CLI (mm) — wallet-enrolled API key, built-in guardrails, risk monitoring and Nansen smart-money signals",
+  "license": "MIT",
+  "type": "module",
+  "keywords": [
+    "oclif-plugin",
+    "metamask",
+    "agent-wallet",
+    "monad",
+    "perpl",
+    "perpetuals",
+    "trading",
+    "nansen",
+    "ai-agents"
+  ],
+  "repository": "github:akugone/mm-plugin-perpl",
+  "files": [
+    "dist",
+    "oclif.manifest.json",
+    "skills"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && oclif manifest",
+    "prepack": "npm run build",
+    "type-check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "oclif": {
+    "bin": "mm",
+    "commands": "./dist/commands",
+    "topicSeparator": " ",
+    "topics": {
+      "perpl": {
+        "description": "Trade perpetuals on Perpl (Monad) with your MetaMask Agent Wallet, behind the plugin's own guardrails"
+      }
+    }
+  },
+  "mm": {
+    "schemaVersion": 1,
+    "minCliVersion": "^6.2.0",
+    "capabilities": [],
+    "commands": [
+      {
+        "id": "perpl:markets",
+        "capabilities": [],
+        "dataAccess": []
+      },
+      {
+        "id": "perpl:status",
+        "capabilities": [
+          "wallet-read"
+        ],
+        "dataAccess": [
+          "accounts"
+        ]
+      },
+      {
+        "id": "perpl:setup",
+        "capabilities": [
+          "wallet-read",
+          "wallet-submit"
+        ],
+        "dataAccess": [
+          "accounts"
+        ]
+      },
+      {
+        "id": "perpl:enroll",
+        "capabilities": [
+          "wallet-read",
+          "wallet-submit"
+        ],
+        "dataAccess": [
+          "accounts"
+        ]
+      },
+      {
+        "id": "perpl:guard",
+        "capabilities": [],
+        "dataAccess": []
+      },
+      {
+        "id": "perpl:order",
+        "capabilities": [
+          "wallet-read"
+        ],
+        "dataAccess": [
+          "accounts"
+        ]
+      },
+      {
+        "id": "perpl:close",
+        "capabilities": [
+          "wallet-read"
+        ],
+        "dataAccess": [
+          "accounts"
+        ]
+      },
+      {
+        "id": "perpl:positions",
+        "capabilities": [
+          "wallet-read"
+        ],
+        "dataAccess": [
+          "accounts"
+        ]
+      },
+      {
+        "id": "perpl:risk",
+        "capabilities": [
+          "wallet-read"
+        ],
+        "dataAccess": [
+          "accounts"
+        ]
+      },
+      {
+        "id": "perpl:signals",
+        "capabilities": [],
+        "dataAccess": []
+      }
+    ]
+  },
+  "peerDependencies": {
+    "@metamask/agent-wallet": "^6.2.0"
+  },
+  "dependencies": {
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@metamask/agent-wallet": "^6.2.0",
+    "@types/node": "^22.20.2",
+    "oclif": "^4",
+    "typescript": "^5",
+    "vitest": "^5"
+  },
+  "engines": {
+    "node": ">=22.18"
+  }
+}
