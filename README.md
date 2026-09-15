@@ -71,12 +71,15 @@ Chain ids: **10143 = Monad Testnet**, **143 = Monad**. Start on testnet. Your Me
 chain (`mm wallet policy get`; testnet is not in the default allowed set — add it once, one 2FA).
 
 1. `mm perpl status --chain-id 10143` — tells you the next step every time.
-2. `mm perpl enroll --chain-id 10143` — generates an Ed25519 key locally, asks Perpl for the EIP-712 enrollment
+2. `mm perpl setup --chain-id 10143 --deposit 100` — three wallet transactions, each through MetaMask's pipeline:
+   approve AUSD to the exchange, `createAccount(amount)`, `allowOrderForwarding(true)` (Perpl's "one-click
+   trading", required for API orders). This also creates your Perpl **profile**, which an API key attaches to —
+   enrolling before the account exists fails with `PERPL_PROFILE_NOT_FOUND` (Perpl answers 404). The wallet needs
+   AUSD for the deposit (≥ 100 on testnet) and a little MON for gas: testnet MON from the Monad faucet, testnet AUSD
+   from the Perpl testnet app.
+3. `mm perpl enroll --chain-id 10143` — generates an Ed25519 key locally, asks Perpl for the EIP-712 enrollment
    payload, **your MetaMask wallet signs it** (you may get a 2FA), proves possession of the key, stores it at
    `~/.config/mm-plugin-perpl/credentials.json` (0600). Scope: trade only. Default lifetime 30 days.
-3. `mm perpl setup --chain-id 10143 --deposit 100` — three wallet transactions, each through MetaMask's pipeline:
-   approve AUSD to the exchange, `createAccount(amount)`, `allowOrderForwarding(true)` (Perpl's "one-click
-   trading", required for API orders). Get testnet AUSD from the Perpl testnet app first.
 4. `mm perpl guard` — defaults: **$100 per order, 3x, $300 per rolling 24h, 3 open positions, all markets,
    confirmation required.** Raise them deliberately: `mm perpl guard --max-notional-usd 250 --max-leverage 5`.
 5. `mm perpl signals` (needs `NANSEN_API_KEY`) — ideas with evidence, sized by the guard.

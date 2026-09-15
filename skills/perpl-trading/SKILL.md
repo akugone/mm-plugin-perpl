@@ -9,8 +9,8 @@ Run every command through the terminal with `--json`. The user never types shell
 
 ## Start with `mm perpl status --json`
 Its `nextStep` field tells you exactly what is missing. Follow it literally:
-1. No API key → `mm perpl enroll --chain-id <id>`. The user's MetaMask wallet signs an EIP-712 authorization (they may get a 2FA on their phone or e-mail). The key is trade-only; it can never withdraw.
-2. No exchange account → `mm perpl setup --chain-id <id> --deposit <AUSD>`. Three wallet transactions (approve, createAccount, allowOrderForwarding), each through MetaMask's policy and 2FA. Ask the user for the deposit amount; never pick it yourself. Testnet is chain 10143, mainnet 143.
+1. No exchange account → `mm perpl setup --chain-id <id> --deposit <AUSD>`. Three wallet transactions (approve, createAccount, allowOrderForwarding), each through MetaMask's policy and 2FA. This also creates the Perpl profile an API key attaches to, so it comes BEFORE enroll. Ask the user for the deposit amount; never pick it yourself. The wallet needs AUSD and a little MON for gas. Testnet is chain 10143, mainnet 143.
+2. No API key → `mm perpl enroll --chain-id <id>`. The user's MetaMask wallet signs an EIP-712 authorization (they may get a 2FA on their phone or e-mail). The key is trade-only; it can never withdraw. `PERPL_PROFILE_NOT_FOUND` means step 1 has not happened yet.
 3. Forwarding disabled → `mm perpl setup --enable-forwarding-only --chain-id <id>`.
 
 ## The guard is the safety net — explain it, never bypass it

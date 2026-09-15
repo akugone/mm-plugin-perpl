@@ -33,8 +33,12 @@ export const NETWORKS: Record<number, Network> = {
 
 export const DEFAULT_CHAIN_ID = Number(process.env.PERPL_CHAIN_ID) || 143;
 
-/** The Origin the API key is enrolled from. Perpl whitelists origins; override with PERPL_ORIGIN. */
-export const ENROLL_ORIGIN = process.env.PERPL_ORIGIN ?? "https://github.com/akugone/mm-plugin-perpl";
+/**
+ * Origin header for API-key enrollment. Perpl only accepts whitelisted browser origins (an unknown one is a plain
+ * HTTP 400 "Bad Request"); a request with NO Origin header — what a CLI naturally sends — is accepted. So the
+ * header is omitted unless PERPL_ORIGIN is set (for integrators Perpl has whitelisted).
+ */
+export const ENROLL_ORIGIN: string | undefined = process.env.PERPL_ORIGIN?.trim() || undefined;
 
 /** Where credentials, guard config and the order ledger live. 0700 dir, 0600 files. */
 export function pluginHome(): string {

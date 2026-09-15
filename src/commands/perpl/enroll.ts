@@ -74,7 +74,7 @@ export default class PerplEnroll extends PluginCommand<EnrollResult> {
     io.progress("Requesting enrollment payload from Perpl");
     const payloadRes = await fetch(`${net.api}/v1/api-key/payload`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Origin: ENROLL_ORIGIN },
+      headers: enrollHeaders(),
       body: JSON.stringify({
         chain_id: chainId,
         address: owner,
@@ -87,7 +87,7 @@ export default class PerplEnroll extends PluginCommand<EnrollResult> {
     io.progress(undefined);
     if (!payloadRes.ok) {
       const text = await payloadRes.text().catch(() => "");
-      throw new CommandError("PERPL_PAYLOAD_FAILED", `Perpl refused the enrollment payload (HTTP ${payloadRes.status}). ${text.slice(0, 200)}`, "If the error mentions Origin, set PERPL_ORIGIN to an origin Perpl has whitelisted for you.");
+      throw new CommandError("PERPL_PAYLOAD_FAILED", `Perpl refused the enrollment payload (HTTP ${payloadRes.status}). ${text.slice(0, 200)}`, "Perpl answers a bare 400 for an Origin it has not whitelisted; leave PERPL_ORIGIN unset unless Perpl gave you one. Otherwise check the address and chain.");
     }
     const { typed_data, mac } = (await payloadRes.json()) as PayloadResponse;
     if (!typed_data?.domain || !typed_data?.types || !typed_data?.message || !mac) {
@@ -99,26 +99,40 @@ export default class PerplEnroll extends PluginCommand<EnrollResult> {
     // 3. The MetaMask wallet signs the EIP-712 payload — through MetaMask's own pipeline (policy, 2FA).
     const executor = (await this.ctx.walletExecutor(io, this.pluginCommandId)) as Executor;
     const summary = `Authorize a trade-only Perpl API key '${label}' for ${owner} on ${net.name}${expiresDays > 0 ? ` (expires in ${expiresDays}d)` : ""}`;
-    const signed = await signTypedData(executor, chainId, typedData, { action: "custom", summary, details: { publicKey: kp.publicKeyHex, scope: "trade", label, origin: ENROLL_ORIGIN } });
+    const signed = await signTypedData(executor, chainId, typedData, { action: "custom", summary, details: { publicKey: kp.publicKeyHex, scope: "trade", label, ...(ENROLL_ORIGIN ? { origin: ENROLL_ORIGIN } : {}) } });
     if (!signed.signature) {
       throw new CommandError("PERPL_WALLET_SIGNATURE_MISSING", `The wallet did not return a signature (status ${signed.status ?? "unknown"}${signed.failure ? `: ${signed.failure}` : ""}).`, signed.pollingId ? `Approve the request in MetaMask (2FA), then run enroll again. Track: mm wallet requests watch ${signed.pollingId}` : "Approve the signature in MetaMask and retry.");
     }
 
     // 4. Proof of possession: Ed25519 signature over the same EIP-712 digest.
     // viem's generics need concrete literal types; the payload is server-defined, so cast the whole call once.
-    const digest = (hashTypedData as unknown as (args: unknown) => `0x${string}`)({ domain: typedData.domain, types: typedData.types, primaryType, message: typedData.message });
+    // Perpl returns domain.chainId as a hex string ("0x279f"); viem encodes uint256 from bigint, so normalise it.
+    const domain = { ...typedData.domain } as Record<string, unknown>;
+    if (typeof domain.chainId === "string") domain.chainId = BigInt(domain.chainId);
+    const digest = (hashTypedData as unknown as (args: unknown) => `0x${string}`)({ domain, types: typedData.types, primaryType, message: typedData.message });
     const pop = sign(kp.seedHex, hexToBytes(digest));
 
     // 5. Enroll.
     io.progress("Enrolling key with Perpl");
     const enrollRes = await fetch(`${net.api}/v1/api-key/enroll`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Origin: ENROLL_ORIGIN },
+      headers: enrollHeaders(),
       body: JSON.stringify({ chain_id: chainId, address: owner, typed_data, mac, signature: signed.signature, pop_signature: bytesToHex(pop) }),
     });
     io.progress(undefined);
     if (!enrollRes.ok) {
       const text = await enrollRes.text().catch(() => "");
+      if (enrollRes.status === 404) {
+        // Perpl: "Target profile not found" — the wallet has no Perpl profile / exchange account yet. API keys attach to a profile.
+        throw new CommandError(
+          "PERPL_PROFILE_NOT_FOUND",
+          `Perpl has no profile for ${owner} on ${net.name} yet, so it cannot attach an API key to it (HTTP 404).`,
+          `Create the exchange account first — it is what creates the profile: mm perpl setup --chain-id ${chainId} --deposit <${chainId === 10143 ? "testnet " : ""}AUSD amount> (needs AUSD for collateral and MON for gas on this wallet). Then run enroll again.`,
+        );
+      }
+      if (enrollRes.status === 423) {
+        throw new CommandError("PERPL_KEY_LIMIT", "This Perpl profile already has the maximum of 16 active API keys.", `Revoke old keys at ${net.appUrl}/apikeys, then retry.`);
+      }
       throw new CommandError("PERPL_ENROLL_FAILED", `Perpl refused the enrollment (HTTP ${enrollRes.status}). ${text.slice(0, 200)}`, "The wallet signature or proof-of-possession was not accepted. Retry once; then check https://docs.perpl.xyz.");
     }
     const enrolled = (await enrollRes.json()) as EnrollResponse;
@@ -170,4 +184,8 @@ export function inferPrimaryType(types: Record<string, unknown>): string {
   const roots = names.filter((n) => !referenced.has(n));
   if (roots.length !== 1) throw new CommandError("PERPL_PAYLOAD_INVALID", "Could not determine the EIP-712 primary type of Perpl's payload.", "Retry; if it persists the API changed.");
   return roots[0];
+}
+
+function enrollHeaders(): Record<string, string> {
+  return { "Content-Type": "application/json", Accept: "application/json", ...(ENROLL_ORIGIN ? { Origin: ENROLL_ORIGIN } : {}) };
 }

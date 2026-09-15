@@ -47,7 +47,7 @@ export default class PerplStatus extends PluginCommand<StatusResult> {
 
     const base: StatusResult = { chainId, network: net.name, wallet: owner, enrolled: Boolean(creds), keyLabel: creds?.label, keySource: creds?.source, guard, ready: false, nextStep: "" };
     if (!creds) {
-      base.nextStep = `Enroll a trade-scoped Perpl API key signed by this wallet: mm perpl enroll --chain-id ${chainId}`;
+      base.nextStep = `No Perpl API key for this wallet. If the wallet has no Perpl exchange account yet, create it first (it also creates the Perpl profile an API key attaches to): mm perpl setup --chain-id ${chainId} --deposit <AUSD>. Then: mm perpl enroll --chain-id ${chainId}`;
       return base;
     }
 
