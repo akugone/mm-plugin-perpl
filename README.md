@@ -20,6 +20,10 @@ mm perpl close       close a position at market
 Works with any agent that drives the `mm` CLI — Hermes, Claude Code, Codex, Cursor. A skill for agents is bundled
 in `skills/perpl-trading/SKILL.md`.
 
+> **Status (2026-09-15):** code complete for all commands, 25 tests green, read-only commands verified live on
+> Perpl testnet through `mm`; the wallet-signed enrollment path is verified up to Perpl's profile prerequisite.
+> What is done, what blocks, what is next: **[STATUS.md](STATUS.md)**.
+
 ## Why this shape
 
 Perpl's API places orders through **Ed25519 API keys**, not through the wallet: the exchange forwards the order and
