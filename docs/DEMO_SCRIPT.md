@@ -96,6 +96,12 @@ mm perpl close --market BTC
 
 ## 2. MetaMask cut — ~4:50 (MetaMask bounty field "Submit a demo video (up to 5 mins) showing real flows")
 
+**Produced automatically**: `video/take.sh metamask real` (a real deposit and re-enroll, then the demo agent in
+`video/agent/` trades in plain English: refuses $500 at 10x, asks before $20 at 2x, places it after "Yes.", closes
+after another "Yes.") and `video/compose_metamask.py`. Output: `video/out/demo-metamask.mp4` (~3:15, silent) and
+`video/out/demo-metamask.srt`, whose subtitles are the narration. The script below was the first plan; the produced
+cut follows the subtitles.
+
 What MetaMask's judges check: *all transactions go through the Agent Wallet — no key/token handling, no bypass of
 signing, policy, or MFA*. So this cut puts the wallet side first, then reuses the trading loop of the main demo.
 

@@ -111,10 +111,22 @@ def video_clears(term):
 
 def make_mapper(t0, wall_clears, vid_clears, dur):
     anchors = [(0.0, 0.0)]
-    if len(vid_clears) == len(wall_clears):
-        anchors += [(w - t0, v) for w, v in zip(wall_clears, vid_clears)]
-    else:
-        print(f"! {len(vid_clears)} clears found in the video for {len(wall_clears)} in the log: linear mapping")
+    # Match each logged clear to a blank screen in the video, in order. Blank-looking frames can also come from a
+    # command that prints nothing for a while (an agent thinking), so pick the candidate closest to where the clear
+    # is expected, given the previous anchor and VHS running slightly slower than the wall clock when frames drop.
+    last_r, last_v, pool = 0.0, 0.0, sorted(vid_clears)
+    for w in wall_clears:
+        r = w - t0
+        expect = last_v + (r - last_r) * 0.97
+        cands = [v for v in pool if v > last_v + 0.3 and abs(v - expect) < 8.0]
+        if not cands:
+            print(f"! no blank frame near the clear at +{r:.1f}s; that stretch is mapped linearly")
+            continue
+        v = min(cands, key=lambda c: abs(c - expect))
+        anchors.append((r, v))
+        last_r, last_v = r, v
+    if len(anchors) - 1 != len(wall_clears):
+        print(f"! matched {len(anchors) - 1} of {len(wall_clears)} clears")
     slope = 1.0 if len(anchors) < 2 else (anchors[-1][1] - anchors[-2][1]) / max(1e-6, anchors[-1][0] - anchors[-2][0])
 
     def V(wall):
