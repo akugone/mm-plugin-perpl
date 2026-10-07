@@ -32,8 +32,9 @@ TYPE_MS, ENTER_PAUSE = 0.045, 0.6
 SUBS = {
     "hook": ["This is mm-plugin-perpl. It gives a MetaMask Agent Wallet a new skill: trading perps on Perpl, Monad's on-chain exchange.",
              "On the left, the agent's terminal. On the right, what the human sees."],
-    "signals": ["The agent asks Nansen what smart money is doing.",
-                "A direction, the evidence, and a size already capped by the guard. It never trades on its own."],
+    # Matches the recorded take (BTC and ETH both neutral). If a take shows a bias, say so instead.
+    "signals": ["The agent asks Nansen what smart money is doing on BTC and ETH.",
+                "No clear direction right now, so no suggestion. And either way, it never trades on its own."],
     "guard": ["Perpl orders go through an API key, so MetaMask's Guard Mode never sees them.",
               "The plugin has its own guard. 500 dollars at 10x: refused before anything reaches the exchange.",
               "Raising a limit is a decision, never a retry."],

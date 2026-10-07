@@ -49,8 +49,8 @@ clear
 ```bash
 mm perpl signals --markets BTC,ETH
 ```
-> "The agent asks Nansen what smart money is doing. A direction, the evidence, and a size already capped by the
-> guard. It never trades on its own."
+> "The agent asks Nansen what smart money is doing on BTC and ETH. No clear direction right now, so no suggestion.
+> And either way, it never trades on its own."
 
 **0:30–0:50 — The guard says no** *(left)*
 ```bash
