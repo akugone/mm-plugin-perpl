@@ -29,7 +29,7 @@ Because Perpl orders go through an API key and not through the wallet, MetaMask'
 **Beyond placing orders**
 
 - `mm perpl positions` and `mm perpl risk`: PnL, margin ratio and estimated liquidation price and distance. `risk --json` returns `ok:false` plus `alerts[]` when a threshold is crossed, so a cron job or an agent can relay it to Telegram.
-- `mm perpl signals`: Nansen smart-money netflow on Monad plus smart-money perp positioning, turned into a bias, a score, human-checkable evidence and a suggested order already sized by the guard. It never places an order itself.
+- `mm perpl signals`: Nansen smart-money spot netflow (Monad, Ethereum, Base, Arbitrum, Solana) plus smart-money perp positioning, weighted by conviction, turned into a bias, a score, human-checkable evidence and a suggested order already sized by the guard. It never places an order itself.
 - `mm perpl status` always answers with the exact next step, so an agent can onboard a user end to end.
 - **Perpl Agent Monitor** (https://akugone.github.io/mm-plugin-perpl/): the human's view while the agent trades. Live equity, positions, PnL, estimated liquidation and alerts, plus the account's activity feed, read straight from the Perpl contract with no API key and no backend.
 
@@ -39,7 +39,9 @@ All inputs are named flags. Every command supports `--json`, and errors come bac
 
 **Stack**
 
-TypeScript, oclif, the MetaMask Agent Wallet plugin SDK (mm 6.2 and 7.x), viem, Ed25519 via `node:crypto` (no extra crypto dependency), Perpl REST and trading WebSocket, Nansen API. 25 unit tests (request signing, Ed25519, order frames, guard and ledger, signals, risk), CI on GitHub Actions. Exchange ABI checked against the implementation deployed on Monad Testnet.
+TypeScript, oclif, the MetaMask Agent Wallet plugin SDK (mm 6.2 and 7.x), viem, Ed25519 via `node:crypto` (no extra crypto dependency), Perpl REST and trading WebSocket, Nansen API. 29 unit tests (request signing, Ed25519, order frames, guard and ledger, signals, risk), CI on GitHub Actions. Exchange ABI checked against the implementation deployed on Monad Testnet.
+
+**Verified live on Monad Testnet (2026-10-07)** with a MetaMask server wallet and mm 7.0.0: setup (3 wallet transactions), enroll (wallet-signed EIP-712), a filled BTC market order, positions and risk, a filled close, and Nansen signals against the live API. Evidence and every fix found on the way: STATUS.md.
 
 ## Go-to-market and user acquisition
 
