@@ -47,6 +47,8 @@ Rejected on purpose: Envio, Kuru, Privy, Dynamic, Mera, Agora, Chainlink, Aurora
 - `order --market BTC --side long --notional-usd 20 --leverage 2`: interactive confirm → FILLED at 83 734.3
   (order 4518063112192), ledger written.
 - `close --market BTC`: FILLED at 83 698.4. Balance after round trip 999.98 AUSD.
+- `deposit --amount 100`: approve `0xb5f6…222b` + depositCollateral `0x9113…2fe8`, both status 1; account 958 999.98 →
+  1099.98 AUSD, wallet 4000 → 3900 AUSD; the dashboard's activity feed shows the deposit.
 - `order` guard pre-flight: `GUARD_BLOCKED` and `--dry-run` now work before enrollment (public market data).
 
 ## Found on the way (fixed)
@@ -80,9 +82,8 @@ everything is on-chain.
 
 ## Still to run live
 
-1. `mm perpl deposit --amount 100` (approve + `depositCollateral`, selector checked on the deployed implementation).
-2. `mm perpl risk` from a Hermes cron → Telegram (the Perpl "risk tool" story).
-3. Demo video (≤ 3 min), pitch (≤ 2 min), MetaMask bounty video (≤ 5 min, real flows); logo; submission (texts in
+1. `mm perpl risk` from a Hermes cron → Telegram (the Perpl "risk tool" story).
+2. Demo video (≤ 3 min), pitch (≤ 2 min), MetaMask bounty video (≤ 5 min, real flows); logo; submission (texts in
    `docs/SUBMISSION.md`, closes 14 Oct 05:59 CEST).
 
 ## Known gaps / ideas
