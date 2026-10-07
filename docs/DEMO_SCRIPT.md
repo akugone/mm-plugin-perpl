@@ -63,6 +63,10 @@ mm perpl close --chain-id 10143 --market BTC
 ```
 > "Closing never hits the notional caps, because it reduces risk, but it still asks for confirmation. Closed."
 
+**2:25–2:45 (alternative) — The human's view** *(browser: akugone.github.io/mm-plugin-perpl, with a position open)*
+> "And this is what the human sees while the agent trades: live positions, PnL, and how far each one is from
+> liquidation, straight from the Perpl contract."
+
 **2:45–3:00 — Proof on chain** *(browser: testnet.monadscan.com/address/0x62Fe7760f9462D766af38EccfA4B5889d9FA32Ab)*
 > "The account was opened by the MetaMask wallet itself: approve, create account, enable one-click trading,
 > each through MetaMask's policy and 2FA. mm-plugin-perpl: perps on Monad, for agents you can trust."
@@ -134,6 +138,22 @@ Face camera or voice over 3–4 simple visuals. Team, problem, why.
 > Telegram risk alerts, and mainnet. Thanks!"
 
 ---
+
+## 4. Perpl bounties — max 2:00 each
+
+**Best use of Perpl's API** ("trading bot or automation system … with demonstrated real on-chain activity"): cut of
+video 1 from 0:55 to 2:45 (guard refusal, real order, positions/risk, close), ending on the dashboard's activity feed
+showing the open and the close.
+
+**Best Analytics / Risk Tool** ("walking through your dashboard features"):
+1. *(0:00)* Open https://akugone.github.io/mm-plugin-perpl/ with a position open on the agent wallet (open one with
+   `mm perpl order` just before recording). "The agent's account: equity, free and posted collateral, PnL."
+2. *(0:25)* Positions table: margin ratio, maintenance margin, estimated liquidation and distance bar.
+3. *(0:50)* Risk alerts: open a higher-leverage position (within your guard, e.g. raise `--max-leverage` on purpose and
+   say so), or paste the address of a riskier testnet account, and show the banner turning red with the alerts.
+4. *(1:20)* Activity feed (open/close/deposit with explorer links) and the markets table.
+5. *(1:45)* "Same thresholds as `mm perpl risk`, which an agent runs from cron to ping you on Telegram. No API key,
+   no backend: everything comes from the Perpl contract."
 
 ## Checklist after recording
 

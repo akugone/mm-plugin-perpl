@@ -89,3 +89,7 @@ Verified live on 2026-10-07 against the Nansen API (first run caught a field mis
 ## Perpl API bounty — link
 
 https://github.com/akugone/mm-plugin-perpl
+
+## Perpl Analytics / Risk Tool bounty — dashboard link
+
+https://akugone.github.io/mm-plugin-perpl/

@@ -159,6 +159,21 @@ Nansen bills per call: 5 credits per feed, so 10 per run. The free tier grants 1
 `NANSEN_API_KEY`; `--skip-perps` halves the cost. The command
 reports `creditsSpent` from Nansen's response headers.
 
+## Dashboard: the human's view
+
+**[akugone.github.io/mm-plugin-perpl](https://akugone.github.io/mm-plugin-perpl/)**: Perpl Agent Monitor. The agent trades
+through `mm perpl`; the human watches here, without a terminal. For any wallet (`?address=0x…`, Monad Testnet or
+Monad): equity, free and posted collateral, open positions with PnL, margin ratio, maintenance margin, estimated
+liquidation price and distance, alerts with the same thresholds as `mm perpl risk`, the account's activity
+(account created, deposits, opens, closes, liquidations, with explorer links) and every market's mark, open interest,
+funding and margin parameters. Refreshes every 5 s.
+
+Everything is read from the Perpl Exchange contract through the public Monad RPC (`getAccountByAddr`, `getPosition`,
+`getPerpetualInfoV2`, `getMarginFractions`, events): no API key, no backend, nothing stored. Perpl's events don't index
+the account, and the public RPC caps `eth_getLogs` at 100 blocks, so the activity feed scans the last ~20 minutes
+then stays live; `?from=<block>` scans further back (e.g. `?from=68939700` shows this wallet's first trade). Single
+static file: `dashboard/index.html`, deployed by `.github/workflows/pages.yml`.
+
 ## Risk monitoring from cron
 
 ```
