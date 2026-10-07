@@ -54,7 +54,8 @@ WHAT WE MEASURE — Installs, accounts opened through the plugin, orders placed,
 
 ## Live product
 
-https://testnet.monadscan.com/address/0x62Fe7760f9462D766af38EccfA4B5889d9FA32Ab
+https://perpl-agent-monitor.vercel.app/ (the on-chain proof, the agent wallet's explorer page, is in the judge
+instructions).
 
 ## Judge access instructions
 
