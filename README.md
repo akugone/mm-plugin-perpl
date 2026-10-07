@@ -21,9 +21,12 @@ mm perpl close       close a position at market
 Works with any agent that drives the `mm` CLI — Hermes, Claude Code, Codex, Cursor. A skill for agents is bundled
 in `skills/perpl-trading/SKILL.md`.
 
-> **Status (2026-09-15):** code complete for all commands, 25 tests green, read-only commands verified live on
-> Perpl testnet through `mm`; the wallet-signed enrollment path is verified up to Perpl's profile prerequisite.
-> What is done, what blocks, what is next: **[STATUS.md](STATUS.md)**.
+> **Status (2026-10-07): full loop verified live on Perpl Monad Testnet through `mm` 7.0.0** with a MetaMask server
+> wallet: `setup` (3 wallet transactions: [approve](https://testnet.monadscan.com/tx/0x6418365925138157a61e5c3d1cd0967af5b91d07f657ce5fdfe68ec02dd93343),
+> [createAccount](https://testnet.monadscan.com/tx/0x00c678157d9bbb9d274a28befe0397502dd5c3bc1987b8d652ab37d0a4a0b574),
+> [allowOrderForwarding](https://testnet.monadscan.com/tx/0x1395a721402fcd38d38d4719ca65f8e1d3c9692336d3a3c6b5db2d4d862c7b29)),
+> `enroll` (wallet-signed EIP-712), `status`, a filled market `order`, `positions`, `risk`, and a filled `close`.
+> Not yet run live: `signals` (needs a Nansen key), `deposit`. Details: **[STATUS.md](STATUS.md)**.
 
 ## Why this shape
 
@@ -70,6 +73,22 @@ mm perpl markets --chain-id 10143
 Requirements: Node.js ≥ 22.18 (global `fetch` and `WebSocket`; Ed25519 via `node:crypto` — no extra crypto
 dependency), a MetaMask Agent Wallet signed in (`mm login`, `mm init`).
 
+### Monad Testnet RPC (mm 7)
+
+`mm` sends RPC for chains that have no `rpcTarget` through MetaMask's Infura proxy, which answers `Invalid chainId`
+for Monad Testnet: gas estimation fails before anything is signed (the plugin reports `MM_CHAIN_RPC_UNAVAILABLE`).
+Declare the chain once with its public RPC in mm's wallet state (`~/.metamask/wallets.json`, `data.customEvmChains`),
+with no `mm` command running:
+
+```json
+{ "key": "monad-testnet", "chainId": 10143, "caip2": "eip155:10143", "name": "Monad Testnet",
+  "nativeCurrency": { "name": "Monad", "symbol": "MON", "decimals": 18 },
+  "blockExplorer": "https://testnet.monadscan.com", "rpcTarget": "https://testnet-rpc.monad.xyz" }
+```
+
+Check: `mm wallet balance --testnet-chain-ids 10143` lists your MON. Monad mainnet (143) is served by the proxy and
+needs nothing.
+
 ## First run, step by step
 
 Chain ids: **10143 = Monad Testnet**, **143 = Monad**. Start on testnet. Your MetaMask wallet policy must allow the
@@ -80,8 +99,9 @@ chain (`mm wallet policy get`; testnet is not in the default allowed set — add
    approve AUSD to the exchange, `createAccount(amount)`, `allowOrderForwarding(true)` (Perpl's "one-click
    trading", required for API orders). This also creates your Perpl **profile**, which an API key attaches to —
    enrolling before the account exists fails with `PERPL_PROFILE_NOT_FOUND` (Perpl answers 404). The wallet needs
-   AUSD for the deposit (≥ 100 on testnet) and a little MON for gas: testnet MON from the Monad faucet, testnet AUSD
-   from the Perpl testnet app.
+   AUSD for the deposit (≥ 100 on testnet) and a little MON for gas: testnet MON from the Monad faucet (faucet.monad.xyz). There is
+   no testnet AUSD faucet: a Perpl testnet account opened from the web app is credited with testnet AUSD, which
+   you can withdraw in the app and send to the agent wallet.
 3. `mm perpl enroll --chain-id 10143` — generates an Ed25519 key locally, asks Perpl for the EIP-712 enrollment
    payload, **your MetaMask wallet signs it** (you may get a 2FA), proves possession of the key, stores it at
    `~/.config/mm-plugin-perpl/credentials.json` (0600). Scope: trade only. Default lifetime 30 days.

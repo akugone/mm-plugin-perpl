@@ -115,8 +115,28 @@ export const POSITION_STATUS: Record<number, string> = { 1: "OPEN", 2: "CLOSED",
 export const ORDER_FAILURE: Record<number, string> = {
   1: "InsufficientBalance", 5: "PerpetualSolvency", 8: "ExceedsMaxNegPnlCollat",
 };
+/** OrderStatusReason, full table from PerplFoundation/api-docs types.md. */
 export const ORDER_STATUS_REASON: Record<number, string> = {
-  23: "MakerOrderSettlementFailed", 32: "OrderDescIdTooLow", 34: "OrderForwardingNotAllowed", 36: "OrderPostFailed", 44: "TakerOrderSettlementFailed",
+  0: "Unspecified", 1: "AmountExceedsAvailableBalance", 2: "AccountFrozen", 3: "CancelExistingInvalidCloseOrders",
+  4: "CantChangeCloseOrder", 5: "ChangeExpiredOrderNeedsNewExpiry", 6: "ClearingExpiredOrder",
+  7: "ClearingFrozenAccountOrder", 8: "ClearingInvalidCloseOrder", 9: "ClearingSelfMatchingOrder",
+  10: "CloseOrderExceedsPosition", 11: "CloseOrderPositionMismatch", 12: "ContractNotOperational", 13: "CrossesBook",
+  14: "ExceedsLastExecutionBlock", 15: "ForwardingReverted", 16: "ImmediateOrCancelExecuted",
+  17: "ImmediateOrderUnderMinimum", 18: "InsuficientFundsForRecycleFee", 19: "InvalidAccountFrozenOrder",
+  20: "InvalidExpiryBlock", 21: "InvalidOrderId", 22: "MakerOrderFilled", 23: "MakerOrderSettlementFailed",
+  24: "MaximumAccountOrders", 25: "MaxMatchesReached", 26: "NoOp", 27: "OrderBookFull", 28: "OrderCancelled",
+  29: "OrderCancelledByAdmin", 30: "OrderCancelledByLiquidator", 31: "OrderChanged", 32: "OrderDescIdTooLow",
+  33: "OrderDoesNotExist", 34: "OrderForwardingNotAllowed", 35: "OrderPlaced", 36: "OrderPostFailed",
+  37: "OrderSettlementImpliesInsolvent", 38: "OrderSizeExceedsAvailableSize", 39: "PostOrderUnderMinimum",
+  40: "PriceOutOfRange", 41: "RecycleBalanceInsufficientSevere", 42: "SizeOutOfRange", 43: "TakerOrderFilled",
+  44: "TakerOrderSettlementFailed", 45: "UnableToCancelOrder", 46: "UnmatchedLotRemainsInFillOrKill",
+  47: "UnspecifiedCollateral", 48: "UnspecifiedPrice", 49: "UnspecifiedSize", 50: "WrongAccountForOrder",
+  51: "WrongChainForOrder", 52: "WrongMarketForOrder", 53: "PerpetualInsolvent", 54: "Triggered",
+  55: "InvalidAmount", 56: "InvalidFlags", 57: "InvalidTriggerOrder", 58: "WrongTriggerPosition",
+  59: "TriggerDescIdTooLow", 60: "TriggerOrderRequest", 61: "ValueExceedsMaximum",
+  62: "ClearingRemainingOrderLockBeyondBalance", 63: "PriceSetDuringTriggerExec",
+  64: "TriggeredExecutionAttemptsExhausted", 65: "TriggeredOrderExecuted", 66: "TriggeredOrderPartiallyFilled",
+  67: "TriggeredOrderExpired", 68: "TriggeredOrderRecoverableFailure", 69: "OrderExtensionRejected",
 };
 
 export type OrderRequest = {

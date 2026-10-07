@@ -1,6 +1,6 @@
 # Project status — mm-plugin-perpl
 
-Last updated: 2026-09-15 (day 1). Hackathon: Monad **Metropolis**, build window 1 Sep → 13 Oct 2026,
+Last updated: 2026-10-07. Hackathon: Monad **Metropolis**, build window 1 Sep → 13 Oct 2026,
 submissions open 22 Sep, close **14 Oct 05:59 CEST**, judging 14–27 Oct, winners 3–4 Nov.
 Project already registered on hackathon.monad.xyz (primary track **Onchain Finance & Trading**), repo field to
 point here.
@@ -36,36 +36,40 @@ Rejected on purpose: Envio, Kuru, Privy, Dynamic, Mera, Agora, Chainlink, Aurora
 - MetaMask wallet policy of the test wallet `0x62Fe7760f9462D766af38EccfA4B5889d9FA32Ab` now allows chain 10143
   (Monad Testnet) — one 2FA, done 2026-09-15.
 
-## Blocking right now
+## Verified live on 2026-10-07 (Monad Testnet, mm 7.0.0, server wallet `0x62Fe…32Ab`)
 
-1. **Perpl requires a profile before an API key can be enrolled.** `/v1/api-key/enroll` → 404 "Target profile
-   not found" for a wallet with no exchange account (reproduced: fresh wallet → 404; wallet with an account →
-   200). The profile is created by the on-chain `createAccount` — so **`mm perpl setup` must run before
-   `mm perpl enroll`** (docs/skill/status already reordered).
-2. **`setup` needs funds on the server wallet on Monad Testnet**: ≥ 100 testnet AUSD (Perpl minimum to open an
-   account) + a little MON for gas. Both balances are 0 today. The testnet AUSD contract
-   (`0xa9012a055bd4e0edff8ce09f960291c09d5322dc`, AgoraDollar proxy) has **no public mint** (verified). The
-   MetaMask Agent Wallet is a server wallet and cannot connect to the Perpl dapp, so the practical route is:
-   connect a browser MetaMask to https://testnet.perpl.xyz, obtain testnet AUSD there, transfer AUSD + MON
-   (faucet.monad.xyz or the hackathon dashboard faucet) to the server wallet address.
+- `setup --deposit 1000`: approve `0x6418…3343`, createAccount `0x00c6…b574`, allowOrderForwarding `0x1395…7b29`,
+  all status 1. Exchange account **958** with 1000 AUSD. No MFA asked (testnet AUSD is unpriced, so the 24 h outflow
+  limit does not trigger).
+- `enroll`: EIP-712 signed by the server wallet through `ctx.walletExecutor`, key stored 0600, expires 2026-11-06.
+- `status` / `positions` / `risk`: first real WebSocket session; snapshot parsing (`as[]`, `fw`, positions `d[]`)
+  matches. Liquidation estimate 55 783 for a 2x long at 83 734 (−33 %), plausible.
+- `order --market BTC --side long --notional-usd 20 --leverage 2`: interactive confirm → FILLED at 83 734.3
+  (order 4518063112192), ledger written.
+- `close --market BTC`: FILLED at 83 698.4. Balance after round trip 999.98 AUSD.
+- `order` guard pre-flight: `GUARD_BLOCKED` and `--dry-run` now work before enrollment (public market data).
 
-## Not yet exercised live (in order)
+## Found on the way (fixed)
 
-1. `mm perpl setup --chain-id 10143 --deposit 100` — approve, `createAccount`, `allowOrderForwarding` through the
-   wallet executor. Unknowns: Perpl's `createAccount(uint256)` ABI is from the docs (not verified against the
-   deployed contract); MetaMask fee estimation on Monad testnet (Sepolia had `rpc_fee_too_low`; `setup` has no
-   gas flags yet — add `--gas-speed` / explicit fees like `mm-plugin-allowances revoke` if it bites).
-2. `mm perpl enroll --chain-id 10143` — should now pass once the profile exists.
-3. `mm perpl status`, `positions`, `risk` — first real WebSocket session with a key: check the snapshot parsing
-   (`as[]`, `fw`, `lfr`), `PositionsSnapshot` shape (`d[]` assumed), heartbeat `h`.
-4. `mm perpl order --market BTC --side long --notional-usd 20 --leverage 2 --dry-run` then with `--yes` — first
-   real order: verify `mt 3` `cid` echo, `mt 24` matching by `rq`, fill parsing, ledger write.
-5. `mm perpl close`.
-6. `mm perpl signals` with `NANSEN_API_KEY` — verify the real response shapes of `/smart-money/netflow` and
-   `/smart-money/perp-trades` (field names assumed from docs), credit costs in `X-Nansen-Credits-Cost`.
-7. `mm perpl risk` from a Hermes cron → Telegram (the Perpl "risk tool" story).
-8. Demo video (3 min) on Hermes + Kimi; Builder Hub / X posts; hackathon submission (opens 22 Sep) with the
-   bounty fields filled.
+1. **mm 7 rejected the plugin**: `minCliVersion ^6.2.0` → `>=6.2.0 <8`. mm 7.0.0's only breaking change is its
+   license; the plugin SDK surface is unchanged.
+2. **mm 7 cannot reach Monad Testnet RPC**: chains without an `rpcTarget` go through MetaMask's Infura proxy, which
+   answers `Invalid chainId` for 10143, so gas estimation fails before signing. Fix: a `customEvmChains` entry with
+   `rpcTarget: https://testnet-rpc.monad.xyz` (README › Monad Testnet RPC). The plugin now maps the failure to
+   `MM_CHAIN_RPC_UNAVAILABLE` with that hint. Worth reporting to MetaMask (the network registry lists 10143).
+3. **Order status reasons**: only 5 of 70 codes were mapped (a fill showed `code 43`); now the full table from
+   PerplFoundation/api-docs.
+4. **No testnet AUSD faucet** (confirmed by Perpl on Discord). Route used: a Perpl testnet account opened from the
+   web app is credited with testnet AUSD → withdraw in the app → transfer to the agent wallet.
+
+## Still to run live
+
+1. `mm perpl signals` with `NANSEN_API_KEY` — response shapes of `/smart-money/netflow` and
+   `/smart-money/perp-trades` are still assumed from the docs.
+2. `mm perpl deposit --amount 100` (approve + `depositCollateral`, selector checked on the deployed implementation).
+3. `mm perpl risk` from a Hermes cron → Telegram (the Perpl "risk tool" story).
+4. Demo video (≤ 3 min), pitch (≤ 2 min), MetaMask bounty video (≤ 5 min, real flows); logo; submission (texts in
+   `docs/SUBMISSION.md`, closes 14 Oct 05:59 CEST).
 
 ## Known gaps / ideas
 
