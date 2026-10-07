@@ -24,7 +24,7 @@ export const erc20Abi = [
   },
 ] as const;
 
-/** Perpl Exchange contract — the two entry points documented for API trading setup. */
+/** Perpl Exchange contract — account setup and collateral deposit (selectors checked against the deployed implementation). */
 export const exchangeAbi = [
   {
     type: "function",
@@ -32,6 +32,13 @@ export const exchangeAbi = [
     stateMutability: "nonpayable",
     inputs: [{ name: "amountCNS", type: "uint256" }],
     outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "depositCollateral",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "amountCNS", type: "uint256" }],
+    outputs: [],
   },
   {
     type: "function",

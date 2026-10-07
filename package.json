@@ -1,7 +1,7 @@
 {
   "name": "mm-plugin-perpl",
   "version": "0.1.0",
-  "description": "Trade perpetuals on Perpl (Monad) from the MetaMask Agent Wallet CLI (mm) — wallet-enrolled API key, built-in guardrails, risk monitoring and Nansen smart-money signals",
+  "description": "Trade perpetuals on Perpl (Monad) from the MetaMask Agent Wallet CLI (mm) \u2014 wallet-enrolled API key, built-in guardrails, risk monitoring and Nansen smart-money signals",
   "license": "MIT",
   "type": "module",
   "keywords": [
@@ -39,7 +39,7 @@
   },
   "mm": {
     "schemaVersion": 1,
-    "minCliVersion": "^6.2.0",
+    "minCliVersion": ">=6.2.0 <8",
     "capabilities": [],
     "commands": [
       {
@@ -58,6 +58,16 @@
       },
       {
         "id": "perpl:setup",
+        "capabilities": [
+          "wallet-read",
+          "wallet-submit"
+        ],
+        "dataAccess": [
+          "accounts"
+        ]
+      },
+      {
+        "id": "perpl:deposit",
         "capabilities": [
           "wallet-read",
           "wallet-submit"
@@ -125,13 +135,13 @@
     ]
   },
   "peerDependencies": {
-    "@metamask/agent-wallet": "^6.2.0"
+    "@metamask/agent-wallet": ">=6.2.0 <8"
   },
   "dependencies": {
     "viem": "^2.21.0"
   },
   "devDependencies": {
-    "@metamask/agent-wallet": "^6.2.0",
+    "@metamask/agent-wallet": "^7.0.0",
     "@types/node": "^22.20.2",
     "oclif": "^4",
     "typescript": "^5",

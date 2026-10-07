@@ -7,6 +7,7 @@ with the guardrails an agent needs to be trusted with it.
 ```
 mm perpl status      where you stand, and the exact next step
 mm perpl setup       create the Perpl account + enable one-click trading   (wallet transactions → MetaMask policy + 2FA)
+mm perpl deposit     add AUSD collateral to an existing account               (wallet transactions → MetaMask policy + 2FA)
 mm perpl enroll      trade-only API key, authorised by the wallet's EIP-712 signature  (→ MetaMask policy + 2FA)
 mm perpl guard       the plugin's own caps: notional, leverage, rolling 24h, open positions, markets, confirmation
 mm perpl markets     Perpl markets: mark, funding, fees                        (public)
@@ -42,7 +43,7 @@ markets mirror allowlists, and every order is confirmed by a human unless you de
 
 ## Install
 
-Plugins are a beta feature of `mm` (≥ 6.2.0). Until the package is on npm, install from source:
+Plugins are a beta feature of `mm` (6.2.x and 7.x). Until the package is on npm, install from source:
 
 ```bash
 git clone https://github.com/akugone/mm-plugin-perpl && cd mm-plugin-perpl
@@ -99,6 +100,7 @@ chain (`mm wallet policy get`; testnet is not in the default allowed set — add
 | `perpl markets [--chain-id]` | none | Public market list: mark, bid/ask, 24h change, OI, funding, fees, decimals |
 | `perpl status` | `wallet-read` | Enrolled? account? balance, forwarding flag, open positions, guard usage, `nextStep` |
 | `perpl setup --deposit <AUSD> \| --enable-forwarding-only [--skip-approve] [--dry-run]` | `wallet-read`, `wallet-submit` | Approve + createAccount + allowOrderForwarding through the wallet executor |
+| `perpl deposit --amount <AUSD> [--skip-approve] [--dry-run]` | `wallet-read`, `wallet-submit` | Approve + depositCollateral into an existing account |
 | `perpl enroll [--label] [--expires-days] [--force] [--forget]` | `wallet-read`, `wallet-submit` | Trade-only API key; wallet signs EIP-712; Ed25519 proof of possession; stored 0600 |
 | `perpl guard [--max-notional-usd] [--max-leverage] [--max-daily-notional-usd] [--max-open-positions] [--allow-markets] [--require-confirm] [--reset]` | none | Show / change guardrails |
 | `perpl order --market --side --size\|--notional-usd [--leverage] [--price] [--post-only] [--slippage-bps] [--yes] [--dry-run]` | `wallet-read` | Guard-checked, confirmed, forwarded order |
