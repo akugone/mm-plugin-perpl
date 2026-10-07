@@ -69,3 +69,23 @@ Minimal capabilities by design: only `setup`, `deposit` and `enroll` request `wa
 ## SKILL.md
 
 https://github.com/akugone/mm-plugin-perpl/blob/main/skills/perpl-trading/SKILL.md
+
+## Nansen bounty — integration
+
+`mm perpl signals` turns two Nansen API endpoints into trade decisions for Perpl markets, inside the MetaMask Agent Wallet CLI that AI agents already drive.
+
+Endpoints: POST /api/v1/smart-money/netflow (spot netflow of labelled smart wallets, one call across Monad, Ethereum, Base, Arbitrum and Solana) and POST /api/v1/smart-money/perp-trades (smart-money perp positioning, trailing window).
+
+Beyond raw data:
+- Per Perpl market, the plugin maps symbols to the tokens Nansen reports (BTC → WBTC/cbBTC, ETH → WETH/stETH, MON → WMON…).
+- It keeps only opens and adds (reductions and closes say nothing about conviction), then weights direction by conviction: full weight at $100k opened across 3 trades, so a lone $98 open can't produce a trade idea.
+- Output per market: bias (long/short/neutral), a score from −1 to +1, a confidence level, human-checkable evidence lines ("+$538.6k long vs +$4.9k short across 4 trades"), and a suggested order already sized by the user's guardrails (max notional, max leverage).
+- It never places an order: the agent shows the idea, the user decides, and `mm perpl order` re-checks every limit and asks for confirmation.
+
+Agent-native: JSON output, a bundled SKILL.md telling agents how to present signals, and credit accounting from Nansen's X-Nansen-Credits-Cost header (10 credits per run, `--skip-perps` halves it).
+
+Verified live on 2026-10-07 against the Nansen API (first run caught a field mismatch, `side` vs `position_side`, now fixed and covered by tests). Note: smart-money netflow currently returns no rows for Monad itself, which is why netflow also scans the chains where the same assets trade.
+
+## Perpl API bounty — link
+
+https://github.com/akugone/mm-plugin-perpl
