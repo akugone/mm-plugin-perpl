@@ -1,82 +1,100 @@
 # Demo scripts — mm-plugin-perpl (Metropolis)
 
-Three videos are required. Narration in English (judges), stage directions in *italics*.
-Record the terminal at a large font (≥ 18 pt), dark theme, one command per shot. Clear `~/.config/mm-plugin-perpl/ledger.json`
-before recording if you want the 24 h counter to start at $0.
+Three videos, recorded in one session and cut three ways:
 
-Before recording, check:
+| Video | Length | Used for |
+|---|---|---|
+| 1. Main demo | 2:00 | Technical demo · Perpl API bounty · Perpl Analytics bounty · Nansen bounty (optional) |
+| 2. MetaMask cut | ~4:00 | MetaMask "Best Agent Wallet Plugin" bounty |
+| 3. Pitch | 2:00 | Pitch video |
 
-```bash
-mm perpl status --chain-id 10143          # ready: true, account 958, ~1000 AUSD, 0 positions
-mm wallet balance --testnet-chain-ids 10143 --token-contracts 0xa9012a055bd4e0edff8ce09f960291c09d5322dc
-```
+Narration in English (judges), stage directions in *italics*.
 
 ---
 
-## 1. Technical demo — max 3:00 (field "Technical demo video")
+## 1. Main demo — 2:00
 
-Rule from the form: show the working product, not slides or a code walkthrough.
+**The shot**: terminal on the left half of the screen, the dashboard on the right half. Every command on the left
+shows up on the right within 5 seconds. That one frame proves the bot *and* the risk tool.
 
-**0:00–0:15 — Hook** *(terminal on screen, Perpl testnet app in a second window)*
-> "This is mm-plugin-perpl. It gives a MetaMask Agent Wallet a new skill: trading perpetuals on Perpl, Monad's
-> on-chain perps exchange, with guardrails an AI agent can't talk its way around."
+### Setup (before you hit record)
 
-**0:15–0:35 — Where we stand**
 ```bash
-mm perpl status --chain-id 10143
+export PERPL_CHAIN_ID=10143                          # no --chain-id on screen
+read -s NANSEN_API_KEY && export NANSEN_API_KEY      # paste the key, nothing is echoed
+mm perpl guard --reset                               # default guard: $100/order, 3x, $300/24h, confirm
+mm perpl status                                      # ready: true, account 958, ~1100 AUSD, 0 positions
+clear
 ```
-> "One command tells the agent where it stands: the wallet is a MetaMask server wallet, its key never leaves
-> MetaMask. It has a Perpl account with collateral, a trade-only API key, and the guard's limits."
 
-**0:35–0:55 — Markets**
+- Terminal: font ≥ 18 pt, dark theme, ~95 columns wide.
+- Browser (right half): https://perpl-agent-monitor.vercel.app/ in light mode (◐ button), zoom 110 %, scrolled to the
+  top. The default address is the agent wallet, nothing to type.
+- The account must be flat at the start (the dashboard says "Risk OK. Account #958 is flat").
+- Rehearse once without recording: `signals` costs 10 Nansen credits per run (free tier: 10 a day, 75 left on
+  2026-10-07), so rehearse with `--skip-perps` (5 credits) or skip it in the rehearsal.
+
+### Script (≈ 280 words — read at a calm pace, it fits in 2:00)
+
+**0:00–0:12 — Hook** *(both windows visible, nothing running)*
+> "This is mm-plugin-perpl. It gives a MetaMask Agent Wallet a new skill: trading perps on Perpl, Monad's on-chain
+> exchange. On the left, the agent's terminal. On the right, what the human sees."
+
+**0:12–0:30 — Idea** *(left)*
 ```bash
-mm perpl markets --chain-id 10143
+mm perpl signals --markets BTC,ETH
 ```
-> "Live Perpl markets: mark price, funding, open interest, fees. Everything is JSON, so any agent can use it."
+> "The agent asks Nansen what smart money is doing. Over half a million dollars of long opens on BTC: a long bias,
+> with the evidence, and a suggested size already capped by the guard. It never trades on its own."
 
-**0:55–1:25 — The guard says no** *(the key moment, take your time)*
+*(Read the numbers that actually come out; if both are neutral, say "no clear signal today, so the agent stays
+small".)*
+
+**0:30–0:50 — The guard says no** *(left)*
 ```bash
-mm perpl order --chain-id 10143 --market BTC --side long --notional-usd 500 --leverage 10
+mm perpl order --market BTC --side long --notional-usd 500 --leverage 10
 ```
-> "Perpl orders go through an API key, so MetaMask's own Guard Mode never sees them. The plugin closes that gap.
-> Five hundred dollars at 10x? Refused before anything reaches the exchange: over the per-order cap, over the
-> max leverage, over the rolling 24-hour cap. Raising a limit is a deliberate command, never a retry."
+> "Perpl orders go through an API key, so MetaMask's Guard Mode never sees them. The plugin has its own guard.
+> Five hundred dollars at 10x: refused before anything reaches the exchange. Raising a limit is a decision,
+> never a retry."
 
-**1:25–2:00 — A real order** *(answer `y` at the prompt)*
+**0:50–1:20 — A real order** *(left, answer `y` at the prompt; then look right)*
 ```bash
-mm perpl order --chain-id 10143 --market BTC --side long --notional-usd 20 --leverage 2
+mm perpl order --market BTC --side long --notional-usd 20 --leverage 2
 ```
-> "Twenty dollars at 2x is within the guard. The plugin states the exact order and asks for confirmation. An agent
-> must get the user's yes on that exact order before it can add --yes. Filled, with the fill price."
+> "Twenty dollars at 2x is within the guard. The plugin states the exact order and asks for a yes. Filled on
+> Perpl. And on the right, without touching anything: the position, its PnL, and how far it is from liquidation."
 
-**2:00–2:25 — Monitor**
+*(Wait for the dashboard refresh — up to 5 s — before saying "and on the right".)*
+
+**1:20–1:42 — The human's view** *(right; move the mouse to what you name)*
+> "Margin ratio, maintenance margin, estimated liquidation price, and the same alert thresholds the agent's risk
+> check uses from a cron job. Below, the agent's activity, each line linked to the explorer. All of it read
+> straight from the Perpl contract: no API key, no backend."
+
+*(Scroll down to "Agent activity": the "Opened" row is there.)*
+
+**1:42–1:55 — Close** *(left, answer `y`)*
 ```bash
-mm perpl positions --chain-id 10143
-mm perpl risk --chain-id 10143 --json
+mm perpl close --market BTC
 ```
-> "Positions with PnL, margin ratio and an estimated liquidation price. And risk returns ok:false plus alerts when a
-> threshold is crossed, so a cron job or an agent can ping you on Telegram."
+> "Closing reduces risk, so no cap blocks it, but it still asks. Closed, and the dashboard shows the realised PnL."
 
-**2:25–2:45 — Close**
-```bash
-mm perpl close --chain-id 10143 --market BTC
-```
-> "Closing never hits the notional caps, because it reduces risk, but it still asks for confirmation. Closed."
+**1:55–2:00 — Outro** *(both windows)*
+> "mm-plugin-perpl: perps on Monad, for agents you can trust."
 
-**2:25–2:45 (alternative) — The human's view** *(browser: perpl-agent-monitor.vercel.app, with a position open)*
-> "And this is what the human sees while the agent trades: live positions, PnL, and how far each one is from
-> liquidation, straight from the Perpl contract."
+### If something goes wrong on camera
 
-**2:45–3:00 — Proof on chain** *(browser: testnet.monadscan.com/address/0x62Fe7760f9462D766af38EccfA4B5889d9FA32Ab)*
-> "The account was opened by the MetaMask wallet itself: approve, create account, enable one-click trading,
-> each through MetaMask's policy and 2FA. mm-plugin-perpl: perps on Monad, for agents you can trust."
+- Order rejected or `FAILED`: say "the exchange rejected it, nothing is open" and re-run; it's a real exchange.
+- Dashboard slow: wait one refresh (5 s); don't reload the page (the activity scan restarts).
+- `signals` out of credits (`NANSEN_CREDITS`): cut that segment, the video still stands at ~1:40.
 
 ---
 
 ## 2. MetaMask bounty demo — max 5:00 (field "Submit a demo video … showing real flows")
 
 Requirement: all transactions go through the Agent Wallet, no key handling, no bypass of signing, policy or MFA.
-Reuse video 1 and add the wallet-side flows in front of it.
+Reuse the main demo and add the wallet-side flows in front of it.
 
 **0:00–0:30 — Custody** *(terminal)*
 ```bash
@@ -105,9 +123,9 @@ mm perpl enroll --chain-id 10143 --force
 > "The API key is authorised by an EIP-712 signature from the MetaMask wallet. The key is trade-only: Perpl API
 > keys can never withdraw. It expires in 30 days and is stored 0600."
 
-**2:40–4:40 — Trading loop** — video 1 from 0:55 to 2:45 (guard refusal, order, positions/risk, close).
+**2:40–4:20 — Trading loop** — the main demo from 0:30 to 1:55 (guard refusal, order + dashboard, close).
 
-**4:40–5:00 — Agent skill** *(show `skills/perpl-trading/SKILL.md` on GitHub)*
+**4:20–4:40 — Agent skill** *(show `skills/perpl-trading/SKILL.md` on GitHub)*
 > "A bundled skill teaches any agent the safe flow: confirm the exact order before --yes, never raise a cap on its
 > own. Works with Hermes, Claude Code, Codex and Cursor."
 
@@ -139,23 +157,10 @@ Face camera or voice over 3–4 simple visuals. Team, problem, why.
 
 ---
 
-## 4. Perpl bounties — max 2:00 each
-
-**Best use of Perpl's API** ("trading bot or automation system … with demonstrated real on-chain activity"): cut of
-video 1 from 0:55 to 2:45 (guard refusal, real order, positions/risk, close), ending on the dashboard's activity feed
-showing the open and the close.
-
-**Best Analytics / Risk Tool** ("walking through your dashboard features"):
-1. *(0:00)* Open https://perpl-agent-monitor.vercel.app/ with a position open on the agent wallet (open one with
-   `mm perpl order` just before recording). "The agent's account: equity, free and posted collateral, PnL."
-2. *(0:25)* Positions table: margin ratio, maintenance margin, estimated liquidation and distance bar.
-3. *(0:50)* Risk alerts: open a higher-leverage position (within your guard, e.g. raise `--max-leverage` on purpose and
-   say so), or paste the address of a riskier testnet account, and show the banner turning red with the alerts.
-4. *(1:20)* Activity feed (open/close/deposit with explorer links) and the markets table.
-5. *(1:45)* "Same thresholds as `mm perpl risk`, which an agent runs from cron to ping you on Telegram. No API key,
-   no backend: everything comes from the Perpl contract."
-
 ## Checklist after recording
 
-- Upload to YouTube (unlisted) or Loom; paste the three links in the form (technical demo, pitch, MetaMask bounty).
-- Optional 30 s "Product advertisement": cut 1:25–2:00 of video 1 (guard refusal → filled order).
+- Upload to YouTube (unlisted) or Loom.
+- Main demo link → "Technical demo video", Perpl API "demo video", Perpl Analytics "demo video", Nansen "optional
+  demo video".
+- MetaMask cut link → MetaMask "demo video (up to 5 mins)". Pitch link → "Pitch video".
+- Optional 30 s "Product advertisement": main demo 0:30–1:20 (guard refusal → filled order on the dashboard).
