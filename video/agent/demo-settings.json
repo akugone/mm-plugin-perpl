@@ -1,0 +1,11 @@
+{
+  "statusLine": { "type": "command", "command": "echo 'MetaMask Agent Wallet 0x62Fe…32Ab · Perpl · Monad testnet'" },
+  "spinnerTipsEnabled": false,
+  "permissions": {
+    "defaultMode": "default",
+    "allow": [
+      "Bash(mm perpl status*)", "Bash(mm perpl markets*)", "Bash(mm perpl positions*)", "Bash(mm perpl risk*)",
+      "Bash(mm perpl signals*)", "Bash(mm perpl guard)", "Bash(mm perpl order*)", "Bash(mm perpl close*)"
+    ]
+  }
+}

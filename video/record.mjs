@@ -59,4 +59,4 @@ await browser.close();
 writeFileSync(join(dashDir, "frames.json"), JSON.stringify(frames));
 console.log(`VHS exited with ${code}; ${frames.length} dashboard frames captured.`);
 if (code !== 0) process.exit(code);
-console.log("Next: node compose.mjs");
+console.log("Next: .venv/bin/python compose.py");
