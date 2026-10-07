@@ -14,6 +14,11 @@ Narration in English (judges), stage directions in *italics*.
 
 ## 1. Main demo — 2:00
 
+**Produced automatically**: `video/take.sh real` records the terminal (VHS) and the dashboard (Playwright) in one take,
+then `video/compose.py` cuts the shots, zooms, transitions and subtitles. Output: `video/out/demo-main.mp4` (silent,
+1920x1080, bottom-right corner left free for the presenter's camera) and `video/out/demo-main.srt`. The subtitles are
+the narration below; record your voice reading them. `./take.sh rehearsal` runs the same thing with read-only commands.
+
 **The shot**: terminal on the left half of the screen, the dashboard on the right half. Every command on the left
 shows up on the right within 5 seconds. That one frame proves the bot *and* the risk tool.
 
@@ -44,11 +49,8 @@ clear
 ```bash
 mm perpl signals --markets BTC,ETH
 ```
-> "The agent asks Nansen what smart money is doing. Over half a million dollars of long opens on BTC: a long bias,
-> with the evidence, and a suggested size already capped by the guard. It never trades on its own."
-
-*(Read the numbers that actually come out; if both are neutral, say "no clear signal today, so the agent stays
-small".)*
+> "The agent asks Nansen what smart money is doing. A direction, the evidence, and a size already capped by the
+> guard. It never trades on its own."
 
 **0:30–0:50 — The guard says no** *(left)*
 ```bash
@@ -78,7 +80,8 @@ mm perpl order --market BTC --side long --notional-usd 20 --leverage 2
 ```bash
 mm perpl close --market BTC
 ```
-> "Closing reduces risk, so no cap blocks it, but it still asks. Closed, and the dashboard shows the realised PnL."
+> "Closing reduces risk, so no cap blocks it, but it still asks. Closed: the position leaves the dashboard, and the
+> activity feed keeps the record."
 
 **1:55–2:00 — Outro** *(both windows)*
 > "mm-plugin-perpl: perps on Monad, for agents you can trust."
