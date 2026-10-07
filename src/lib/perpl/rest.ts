@@ -16,6 +16,18 @@ export async function fetchContext(chainId: number, fetchImpl: FetchLike = fetch
   if (!Array.isArray(ctx.markets) || !Array.isArray(ctx.instances)) {
     throw new CommandError("PERPL_CONTEXT_INVALID", "Perpl context has an unexpected shape.", "The API may have changed; update the plugin.");
   }
+  return normalizeContext(ctx);
+}
+
+/**
+ * Perpl mainnet publishes some markets (BTC, MON on 2026-10-07) with an empty `symbol` and the ticker only in `name`
+ * and `size_units`. Every command keys markets by symbol, so fill it in once here.
+ */
+export function normalizeContext(ctx: PerplContext): PerplContext {
+  for (const m of ctx.markets) {
+    const raw = m as Market & { name?: string; size_units?: string };
+    if (!m.symbol?.trim()) m.symbol = (raw.size_units || raw.name || String(m.id)).trim().toUpperCase();
+  }
   return ctx;
 }
 

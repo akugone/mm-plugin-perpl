@@ -52,3 +52,19 @@ describe("close order frames", () => {
     expect(() => buildCloseOrder({ market: btc, position: short, size: 0.03 })).toThrow(/exceeds/);
   });
 });
+
+describe("normalizeContext", () => {
+  it("fills an empty market symbol from size_units or name (Perpl mainnet BTC/MON)", async () => {
+    const { normalizeContext, findMarket } = await import("../src/lib/perpl/rest");
+    const ctx = normalizeContext({
+      chain: { chain_id: 143, name: "Monad" }, instances: [], tokens: [],
+      markets: [
+        { id: 1, symbol: "", name: "BTC", size_units: "BTC", config: {} },
+        { id: 10, symbol: "", name: "MON", config: {} },
+        { id: 20, symbol: "ETH", config: {} },
+      ],
+    } as never);
+    expect(ctx.markets.map((m) => m.symbol)).toEqual(["BTC", "MON", "ETH"]);
+    expect(findMarket(ctx, "btc").id).toBe(1);
+  });
+});
