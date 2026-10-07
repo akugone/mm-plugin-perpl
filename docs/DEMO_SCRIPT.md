@@ -5,7 +5,7 @@ Three videos, recorded in one session and cut three ways:
 | Video | Length | Used for |
 |---|---|---|
 | 1. Main demo | 2:00 | Technical demo · Perpl API bounty · Perpl Analytics bounty · Nansen bounty (optional) |
-| 2. MetaMask cut | ~4:00 | MetaMask "Best Agent Wallet Plugin" bounty |
+| 2. MetaMask cut | ~4:50 | MetaMask "Best Agent Wallet Plugin" bounty |
 | 3. Pitch | 2:00 | Pitch video |
 
 Narration in English (judges), stage directions in *italics*.
@@ -91,7 +91,7 @@ mm perpl close --market BTC
 
 ---
 
-## 2. MetaMask cut — ~4:15 (MetaMask bounty field "Submit a demo video (up to 5 mins) showing real flows")
+## 2. MetaMask cut — ~4:50 (MetaMask bounty field "Submit a demo video (up to 5 mins) showing real flows")
 
 What MetaMask's judges check: *all transactions go through the Agent Wallet — no key/token handling, no bypass of
 signing, policy, or MFA*. So this cut puts the wallet side first, then reuses the trading loop of the main demo.
