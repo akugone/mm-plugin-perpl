@@ -26,14 +26,14 @@ export type PositionView = {
 };
 
 /**
- * Perpl publishes `maintenance_margin` per market as an integer; the unit is not documented in the public API
- * types. We interpret it as basis points when ≤ 10 000, otherwise as hundred-thousandths, and expose the raw value
- * so the caller can judge. Treat every liquidation figure as an estimate.
+ * Perpl publishes `maintenance_margin` (and `initial_margin`) per market as a leverage in hundredths, the contract's
+ * `maintMarginFracHdths`: MMR = notional / MMF. BTC's 2500 means 25.00x, i.e. a 4% maintenance margin, matching the
+ * docs' table (BTC 4%, ETH 5%). Treat every liquidation figure as a first-order estimate (no funding, no fees).
  */
 export function maintenanceFraction(m: Market): number {
   const raw = m.config.maintenance_margin;
   if (!Number.isFinite(raw) || raw <= 0) return 0.05;
-  return raw <= 10_000 ? raw / 10_000 : raw / 100_000;
+  return 100 / raw;
 }
 
 export function viewPosition(ctx: PerplContext, p: Position, collateral: Token): PositionView | undefined {

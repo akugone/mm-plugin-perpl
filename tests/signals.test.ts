@@ -51,7 +51,7 @@ describe("position view and risk", () => {
   const btc: Market = {
     id: 16, instance_id: 12, symbol: "BTC", name: "BTC Perp", size_units: "BTC", order_ttl_blocks: 20,
     order_max_market_slippage_bps: 1000, order_max_neg_pnl_collat_bps: 1000,
-    config: { is_open: true, price_decimals: 1, size_decimals: 5, initial_margin: 1500, maintenance_margin: 500, maker_fee: 45, taker_fee: 345 },
+    config: { is_open: true, price_decimals: 1, size_decimals: 5, initial_margin: 1500, maintenance_margin: 2000, maker_fee: 45, taker_fee: 345 },
     state: { mrk: 900000 }, // $90,000.0
   };
   const ctx: PerplContext = { chain: { chain_id: 143, name: "Monad" }, instances: [], tokens: [], markets: [btc] };
@@ -59,8 +59,9 @@ describe("position view and risk", () => {
   // long 0.01 BTC from $100,000 with $200 collateral (10x) → mark $90,000: uPnL = -$100, equity $100, notional $900
   const pos: Position = { mkt: 16, acc: 1, pid: 5, st: 1, sd: 1, c: "200000000", ep: 1000000, s: 1000, fee: "0", lv: 1000 };
 
-  it("interprets maintenance margin as bps when small", () => {
+  it("reads maintenance margin as a leverage in hundredths (docs: BTC 4%, ETH 5%)", () => {
     expect(maintenanceFraction(btc)).toBe(0.05);
+    expect(maintenanceFraction({ ...btc, config: { ...btc.config, maintenance_margin: 2500 } })).toBe(0.04);
   });
   it("computes pnl, margin ratio and an estimated liquidation price", () => {
     const v = viewPosition(ctx, pos, ausd)!;

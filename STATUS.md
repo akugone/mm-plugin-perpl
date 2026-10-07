@@ -43,7 +43,7 @@ Rejected on purpose: Envio, Kuru, Privy, Dynamic, Mera, Agora, Chainlink, Aurora
   limit does not trigger).
 - `enroll`: EIP-712 signed by the server wallet through `ctx.walletExecutor`, key stored 0600, expires 2026-11-06.
 - `status` / `positions` / `risk`: first real WebSocket session; snapshot parsing (`as[]`, `fw`, positions `d[]`)
-  matches. Liquidation estimate 55 783 for a 2x long at 83 734 (−33 %), plausible.
+  matches. Liquidation estimate was 55 783 for a 2x long at 83 734 (−33 %): too conservative, see finding 6.
 - `order --market BTC --side long --notional-usd 20 --leverage 2`: interactive confirm → FILLED at 83 734.3
   (order 4518063112192), ledger written.
 - `close --market BTC`: FILLED at 83 698.4. Balance after round trip 999.98 AUSD.
@@ -66,6 +66,9 @@ Rejected on purpose: Envio, Kuru, Privy, Dynamic, Mera, Agora, Chainlink, Aurora
    (full at $100k opened and 3 trades) so a single $98 open no longer yields a full-size suggestion. Smart-money
    netflow returns nothing for Monad (with or without label filters), so netflow now scans Monad + Ethereum, Base,
    Arbitrum, Solana in the same call. Cost: 5 credits per feed; free tier = 10 credits/day.
+6. **Maintenance margin unit**: `maintenance_margin` is a leverage in hundredths (the contract's `maintMarginFracHdths`,
+   MMR = notional / MMF): BTC 2500 = 25x = 4 %, as in Perpl's docs. The plugin read it as basis points (25 %), which
+   made liquidation estimates far too conservative. Fixed, with a test pinned to the docs' table.
 
 ## Still to run live
 
