@@ -10,11 +10,12 @@ os.environ.setdefault("TAKE_DIR", os.path.join(os.path.dirname(os.path.abspath(_
 import compose as C  # noqa: E402
 
 SUBS = {
+    # Matches the recorded take (2026-10-07: BTC and SOL each had one smart-money long, ETH none; all neutral).
     "hook": ["mm-plugin-perpl turns Nansen's smart-money data into trade ideas for Perpl markets, inside the MetaMask Agent Wallet."],
-    "ask": ["The agent asks for ideas. The plugin calls two Nansen endpoints: smart-money netflow and smart-money perp trades."],
-    "result": ["It keeps only new positions and weighs them by conviction, so a single small trade can't make an idea.",
-               "Each market gets a direction, a score and evidence a human can check, with a suggested size that already respects the user's limits.",
-               "Nothing is placed until the user says yes."],
+    "ask": ["The agent asks for ideas. The plugin calls two Nansen endpoints, smart-money netflow and smart-money perp trades, and scores each market."],
+    "result": ["Right now: one 20,000-dollar long on BTC, one on SOL. The plugin weighs smart money by conviction, so a single trade scores near zero.",
+               "Every score comes with evidence a human can check. When there is a real signal, the suggested size already respects the user's limits.",
+               "And nothing is placed until the user says yes."],
     "outro": ["Nansen data, turned into decisions an agent can act on safely."],
 }
 

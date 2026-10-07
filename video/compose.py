@@ -82,8 +82,8 @@ def parse_events():
             else:
                 pending = {"start": t, "cmd": cmd}
                 cmds.append(pending)
-    if t0 is None or len(cmds) < 4:
-        sys.exit(f"events.log incomplete: {len(cmds)} commands")
+    if t0 is None or not cmds:
+        sys.exit("events.log has no command: was the take recorded?")
     return t0, cmds, clears
 
 
