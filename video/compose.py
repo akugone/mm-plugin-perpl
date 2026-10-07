@@ -2,7 +2,8 @@
 """Assemble the main demo from one recorded take (record.mjs).
 
 Inputs : out/term.mp4 (VHS), out/events.log (command start/end, wall clock), out/dash/*.jpg + frames.json (dashboard).
-Outputs: out/demo-main.mp4 (1920x1080, 25 fps, silent), out/demo-main.srt, out/check/*.png (one still per shot).
+Inputs come from a take folder (TAKE_DIR, default out/main). Outputs: out/<name>.mp4 (1920x1080, 25 fps, silent),
+out/<name>.srt, <take>/check/*.png (one still per shot).
 
 Layout: bottom-right corner (x > 1480, y > 812) stays free for the presenter's camera; subtitles sit bottom-left.
 
@@ -18,7 +19,8 @@ import sys
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "out")
+FINAL_DIR = os.path.join(HERE, "out")
+OUT = os.path.abspath(os.environ.get("TAKE_DIR", os.path.join(FINAL_DIR, "main")))  # one recorded take
 TMP = os.path.join(OUT, "tmp")
 W, H, FPS, XF = 1920, 1080, 25, 0.35
 
@@ -138,9 +140,8 @@ def text_box(img):
     return mask.getbbox() or (0, 0, TERM_W, 120)
 
 
-def crop_typing(img):
+def crop_typing(img, ch=380):
     _, y0, _, y1 = text_box(img)
-    ch = 380
     cy = max(0, min(TERM_H - ch, (y0 + y1) // 2 - ch // 2))
     return (0, cy, TERM_W, ch)
 
@@ -221,21 +222,27 @@ def render_shot(i, shot, term, dash, overlays):
     return out
 
 
-def main():
+def load_take():
     os.makedirs(TMP, exist_ok=True)
     term = os.path.join(OUT, "term.mp4")
     dur = duration(term)
     t0, cmds, clears = parse_events()
     V = make_mapper(t0, clears, video_clears(term), dur)
-    sig, guard, order, close = cmds[:4]
     frames = json.load(open(os.path.join(OUT, "dash", "frames.json")))
-    typing = lambda c: len(c["cmd"]) * TYPE_MS + ENTER_PAUSE + 0.25
+    return {"term": term, "dur": dur, "cmds": cmds, "clears": clears, "V": V, "frames": frames}
 
+
+def typing(c):
+    return len(c["cmd"]) * TYPE_MS + ENTER_PAUSE + 0.25
+
+
+def plan_main(take):
+    V, dur, cmds, clears = take["V"], take["dur"], take["cmds"], take["clears"]
+    sig, guard, order, close = cmds[:4]
     c1, c2, c3 = (V(c) for c in clears[:3])
-    t_sig, t_guard, t_order, t_close = (V(c["start"]) for c in (sig, guard, order, close))
+    t_sig, t_guard = V(sig["start"]), V(guard["start"])
     e_order, e_close = V(order["end"]), V(close["end"])
-
-    shots = [
+    return [
         {"name": "intro", "layout": "card-intro", "start": 0.0, "end": 3.0, "beat": "hook"},
         {"name": "hook", "layout": "split", "start": 3.0, "end": t_sig - typing(sig), "beat": "hook"},
         {"name": "sig-type", "layout": "term", "start": t_sig - typing(sig), "end": t_sig + 0.5, "beat": "signals", "frame": t_sig - 0.1, "mode": "typing"},
@@ -250,22 +257,30 @@ def main():
         {"name": "close", "layout": "split", "start": c3, "end": min(dur, e_close + 5.0), "beat": "close"},
         {"name": "outro", "layout": "card-outro", "start": min(dur, e_close + 5.0), "end": max(dur, e_close + 10.0), "beat": "outro"},
     ]
-    shots = [s for s in shots if s["end"] - s["start"] >= 0.8]
 
+
+CARDS_MAIN = {
+    "intro": {"title": "mm-plugin-perpl", "text": "Perps on Monad for the MetaMask Agent Wallet, under limits the agent can't get around."},
+    "outro": {"title": "mm-plugin-perpl", "text": "Perps on Monad, for agents you can trust.",
+              "links": ["perpl-agent-monitor.vercel.app", "github.com/akugone/mm-plugin-perpl"]},
+}
+
+
+def assemble(take, shots, subs_by_beat, cards, name):
+    term, dur, V, frames = take["term"], take["dur"], take["V"], take["frames"]
+    shots = [s for s in shots if s["end"] - s["start"] >= 0.8]
     for s in shots:
         if s["layout"] == "split":
             s["term_crop"], s["term_rect"] = (0, 0, TERM_W, TERM_H), SPLIT_TERM
             s["dash_crop"], s["dash_rect"] = (0, 0, DASH_W, int(SPLIT_DASH[3] / SPLIT_DASH[2] * DASH_W)), SPLIT_DASH
         elif s["layout"] == "term":
             img = term_frame(term, s["frame"])
-            s["term_crop"] = crop_typing(img) if s["mode"] == "typing" else crop_output(img, s.get("max_h", 1150))
+            s["term_crop"] = crop_typing(img, s.get("typing_h", 380)) if s["mode"] == "typing" else crop_output(img, s.get("max_h", 1150))
             s["term_rect"] = ZOOM
         elif s["layout"] == "dash":
             s["dash_crop"], s["dash_rect"] = dash_crop(dash_boxes_at(frames, V, s["start"] + 1.0), *s["dash_keys"]), ZOOM
-    # the outro may run past the terminal recording: cards don't need it
     print("shots:", ", ".join(f"{s['name']} {s['end'] - s['start']:.1f}s" for s in shots))
 
-    # overlays
     timeline, t = [], 0.0
     for k, s in enumerate(shots):
         start = 0.0 if k == 0 else t - XF
@@ -273,7 +288,7 @@ def main():
         t = start + (s["end"] - s["start"])
     total = t
     subs = []
-    for beat, lines in SUBS.items():
+    for beat, lines in subs_by_beat.items():
         idx = [k for k, s in enumerate(shots) if s["beat"] == beat]
         if not idx:
             continue
@@ -294,9 +309,8 @@ def main():
          "labels": [{"x": ZOOM[0], "text": "AGENT · TERMINAL", "kind": "agent"}]},
         {"type": "bg", "file": os.path.join(TMP, "bg-dash.png"), "panels": [dict(zip("xywh", ZOOM), fill="#f7f7f5")],
          "labels": [{"x": ZOOM[0], "text": "HUMAN · DASHBOARD", "kind": "human"}]},
-        {"type": "card", "file": os.path.join(TMP, "card-intro.png"), "title": "mm-plugin-perpl", "text": "Perps on Monad for the MetaMask Agent Wallet, under limits the agent can't get around."},
-        {"type": "card", "file": os.path.join(TMP, "card-outro.png"), "title": "mm-plugin-perpl", "text": "Perps on Monad, for agents you can trust.",
-         "links": ["perpl-agent-monitor.vercel.app", "github.com/akugone/mm-plugin-perpl"]},
+        {"type": "card", "file": os.path.join(TMP, "card-intro.png"), **cards["intro"]},
+        {"type": "card", "file": os.path.join(TMP, "card-outro.png"), **cards["outro"]},
     ] + [{"type": "subtitle", "file": os.path.join(TMP, f"sub_{i:02d}.png"), "text": text} for i, (_, _, text) in enumerate(subs)]
     json.dump(ov, open(os.path.join(TMP, "overlays.json"), "w"))
     run(["node", os.path.join(HERE, "render_overlays.mjs"), os.path.join(TMP, "overlays.json")], quiet=False)
@@ -320,7 +334,7 @@ def main():
         chain.append(f"[{last}][{base + j}:v]overlay=0:0:enable='between(t,{a:.2f},{b:.2f})'[u{j}]")
         last = f"u{j}"
     chain.append(f"[{last}]format=yuv420p[v]")
-    final = os.path.join(OUT, "demo-main.mp4")
+    final = os.path.join(FINAL_DIR, f"{name}.mp4")
     run(["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex", ";".join(chain), "-map", "[v]", "-t", f"{total:.3f}",
          "-r", str(FPS), "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-movflags", "+faststart", final])
 
@@ -329,7 +343,7 @@ def main():
         m, s = divmod(r, 60)
         return f"{int(h):02d}:{int(m):02d}:{int(s):02d},{int((s % 1) * 1000):03d}"
 
-    with open(os.path.join(OUT, "demo-main.srt"), "w") as f:
+    with open(os.path.join(FINAL_DIR, f"{name}.srt"), "w") as f:
         for j, (a, b, text) in enumerate(subs, 1):
             f.write(f"{j}\n{ts(a)} --> {ts(b)}\n{text}\n\n")
 
@@ -339,7 +353,12 @@ def main():
     for k, s in enumerate(shots):
         mid = timeline[k] + (s["end"] - s["start"]) * 0.6
         run(["ffmpeg", "-v", "error", "-y", "-ss", f"{mid:.2f}", "-i", final, "-frames:v", "1", "-vf", "scale=960:-1", os.path.join(check, f"{k:02d}-{s['name']}.png")])
-    print(f"done: {final} ({total:.1f}s), {len(subs)} subtitles, stills in out/check/")
+    print(f"done: {final} ({total:.1f}s), {len(subs)} subtitles, stills in {check}/")
+
+
+def main():
+    take = load_take()
+    assemble(take, plan_main(take), SUBS, CARDS_MAIN, "demo-main")
 
 
 if __name__ == "__main__":

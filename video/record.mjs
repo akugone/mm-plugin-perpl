@@ -4,17 +4,17 @@
 //   node record.mjs            (after: python3 make_tape.py real|rehearsal)
 import { spawn } from "node:child_process";
 import { mkdirSync, rmSync, writeFileSync, existsSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const out = join(here, "out");
+const out = resolve(process.env.TAKE_DIR ?? join(here, "out", "main"));
 const dashDir = join(out, "dash");
 const URL = process.env.DASH_URL ?? "https://perpl-agent-monitor.vercel.app/?refresh=2000";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-if (!existsSync(join(out, "take.tape"))) throw new Error("Run `python3 make_tape.py real|rehearsal` first.");
+if (!existsSync(join(out, "take.tape"))) throw new Error(`No take.tape in ${out}: run make_tape.py first (or ./take.sh).`);
 rmSync(dashDir, { recursive: true, force: true });
 mkdirSync(dashDir, { recursive: true });
 rmSync(join(out, "events.log"), { force: true });
