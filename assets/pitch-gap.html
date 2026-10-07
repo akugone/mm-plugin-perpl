@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The gap — pitch visual</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+  html,body{margin:0;background:#f7f7f5}
+  svg{display:block}
+  .title{font:700 46px Inter,sans-serif;fill:#191919;letter-spacing:-.02em}
+  .sub{font:400 24px Inter,sans-serif;fill:#787774}
+  .box{fill:#fff;stroke:#d3d3d0;stroke-width:2}
+  .box-dark{fill:#191919}
+  .h{font:600 28px Inter,sans-serif;fill:#191919}
+  .h-inv{font:600 28px Inter,sans-serif;fill:#fff}
+  .s{font:400 20px Inter,sans-serif;fill:#787774}
+  .s-inv{font:400 20px Inter,sans-serif;fill:#c9c9c6}
+  .mono{font:500 18px "JetBrains Mono",monospace;fill:#37352f}
+  .ok{fill:#0f7b6c}.okbg{fill:#e7f3f1}
+  .bad{fill:#d44c47}.badbg{fill:#fdebec}
+  .arrow{stroke:#191919;stroke-width:3;fill:none}
+  .arrow-bad{stroke:#d44c47;stroke-width:3;fill:none;stroke-dasharray:10 8}
+  .lane{font:600 16px Inter,sans-serif;fill:#a5a29c;letter-spacing:.12em}
+  .guard{display:none}
+  body.closed .guard{display:inline}
+  body.closed .gap{display:none}
+</style>
+</head>
+<body>
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#191919"/></marker>
+    <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#d44c47"/></marker>
+  </defs>
+
+  <!-- titles -->
+  <g class="gap">
+    <text class="title" x="140" y="150">The wallet protects every transaction.</text>
+    <text class="title" x="140" y="210">Trading slips past it.</text>
+    <text class="sub" x="140" y="262">Perps orders are sent with an exchange key, not through the wallet.</text>
+  </g>
+  <g class="guard">
+    <text class="title" x="140" y="150">mm-plugin-perpl puts a guard</text>
+    <text class="title" x="140" y="210">where the wallet can't see.</text>
+    <text class="sub" x="140" y="262">Every order is checked before it reaches the exchange.</text>
+  </g>
+
+  <!-- agent -->
+  <rect class="box-dark" x="140" y="470" width="300" height="240" rx="18"/>
+  <text class="h-inv" x="290" y="575" text-anchor="middle">AI agent</text>
+  <text class="s-inv" x="290" y="612" text-anchor="middle">Hermes, Claude Code,</text>
+  <text class="s-inv" x="290" y="640" text-anchor="middle">Codex, Cursor…</text>
+
+  <!-- lane 1: wallet -->
+  <text class="lane" x="560" y="372">MONEY MOVES</text>
+  <path class="arrow" d="M440 540 C 500 540, 500 440, 560 440" marker-end="url(#a)"/>
+  <rect class="box" x="568" y="390" width="400" height="110" rx="14"/>
+  <text class="h" x="598" y="438">MetaMask Agent Wallet</text>
+  <text class="s" x="598" y="472">keys stay in MetaMask</text>
+  <path class="arrow" d="M968 445 L 1200 445" marker-end="url(#a)"/>
+  <rect class="okbg" x="1208" y="390" width="572" height="110" rx="14"/>
+  <text class="h" x="1238" y="438" style="fill:#0f7b6c">✓ Checked</text>
+  <text class="mono" x="1238" y="474">policy · simulation · Blockaid · 2FA</text>
+
+  <!-- lane 2: trades -->
+  <text class="lane" x="560" y="712">TRADES</text>
+  <!-- gap version: straight to the key -->
+  <g class="gap">
+    <path class="arrow-bad" d="M440 640 C 500 640, 500 780, 560 780" marker-end="url(#ab)"/>
+    <rect class="box" x="568" y="730" width="400" height="110" rx="14"/>
+    <text class="h" x="598" y="778">Exchange API key</text>
+    <text class="s" x="598" y="812">orders go straight to Perpl</text>
+    <path class="arrow-bad" d="M968 785 L 1200 785" marker-end="url(#ab)"/>
+    <rect class="badbg" x="1208" y="730" width="572" height="110" rx="14"/>
+    <text class="h" x="1238" y="778" style="fill:#d44c47">✗ Nothing checks them</text>
+    <text class="mono" x="1238" y="814">wrong size, wrong market, endless loop</text>
+  </g>
+  <!-- closed version: guard in between -->
+  <g class="guard">
+    <path class="arrow" d="M440 640 C 500 640, 500 780, 560 780" marker-end="url(#a)"/>
+    <rect x="568" y="720" width="400" height="130" rx="14" fill="#191919"/>
+    <text class="h-inv" x="598" y="768">mm-plugin-perpl guard</text>
+    <text class="s-inv" x="598" y="800">max per trade · max per day</text>
+    <text class="s-inv" x="598" y="828">leverage · markets · your “yes”</text>
+    <path class="arrow" d="M968 785 L 1200 785" marker-end="url(#a)"/>
+    <rect class="okbg" x="1208" y="730" width="572" height="110" rx="14"/>
+    <text class="h" x="1238" y="778" style="fill:#0f7b6c">✓ Checked, then sent to Perpl</text>
+    <text class="mono" x="1238" y="814">trade-only key · can never withdraw</text>
+  </g>
+
+  <!-- footer -->
+  <text class="s" x="140" y="990">mm-plugin-perpl · perps on Monad for the MetaMask Agent Wallet</text>
+</svg>
+<script>if (location.hash === "#closed") document.body.classList.add("closed");</script>
+</body>
+</html>

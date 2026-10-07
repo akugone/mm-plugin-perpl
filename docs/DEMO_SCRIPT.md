@@ -189,7 +189,7 @@ demo videos do that. ≈ 250 words: about 1:55 read calmly.
 ### Visuals to prepare
 
 1. **Logo** (`assets/logo.png`) on a plain background, or you on camera.
-2. **The gap, as one diagram** (three boxes and two arrows is enough):
+2. **The gap, as one diagram**: `assets/pitch-gap.png` (problem), then `assets/pitch-closed.png` (solution); source `assets/pitch-gap.html`.
    `Agent → mm (MetaMask Agent Wallet) → wallet transactions ✓ policy · Blockaid · 2FA`
    `Agent → Perpl API key → orders ✗ invisible to the wallet` → then the guard box appears in between.
 3. **A screenshot of the guard refusing** the $500 / 10x order (terminal).
