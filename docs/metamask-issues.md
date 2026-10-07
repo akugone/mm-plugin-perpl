@@ -1,4 +1,7 @@
-# Draft issues for MetaMask (not posted yet)
+# Issues filed with MetaMask
+
+Posted on 2026-10-07: [#5](https://github.com/MetaMask/agent-wallet-plugin-template/issues/5) (minCliVersion) and
+[#6](https://github.com/MetaMask/agent-wallet-plugin-template/issues/6) (Monad Testnet RPC). Text as posted below.
 
 Target: https://github.com/MetaMask/agent-wallet-plugin-template/issues (public; the CLI's own tracker,
 MetaMask/agentic, is private).

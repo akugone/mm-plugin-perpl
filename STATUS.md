@@ -58,7 +58,8 @@ Rejected on purpose: Envio, Kuru, Privy, Dynamic, Mera, Agora, Chainlink, Aurora
 2. **mm 7 cannot reach Monad Testnet RPC**: chains without an `rpcTarget` go through MetaMask's Infura proxy, which
    answers `Invalid chainId` for 10143, so gas estimation fails before signing. Fix: a `customEvmChains` entry with
    `rpcTarget: https://testnet-rpc.monad.xyz` (README › Monad Testnet RPC). The plugin now maps the failure to
-   `MM_CHAIN_RPC_UNAVAILABLE` with that hint. Worth reporting to MetaMask (the network registry lists 10143).
+   `MM_CHAIN_RPC_UNAVAILABLE` with that hint. Reported: MetaMask/agent-wallet-plugin-template#6 (and the template's
+   `minCliVersion ^6.2.0`, which makes every template plugin refuse to load on mm 7: #5).
 3. **Order status reasons**: only 5 of 70 codes were mapped (a fill showed `code 43`); now the full table from
    PerplFoundation/api-docs.
 4. **No testnet AUSD faucet** (confirmed by Perpl on Discord). Route used: a Perpl testnet account opened from the
