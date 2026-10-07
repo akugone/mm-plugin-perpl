@@ -59,13 +59,13 @@ Rejected on purpose: Envio, Kuru, Privy, Dynamic, Mera, Agora, Chainlink, Aurora
    `MM_CHAIN_RPC_UNAVAILABLE` with that hint. Worth reporting to MetaMask (the network registry lists 10143).
 3. **Order status reasons**: only 5 of 70 codes were mapped (a fill showed `code 43`); now the full table from
    PerplFoundation/api-docs.
+4. **No testnet AUSD faucet** (confirmed by Perpl on Discord). Route used: a Perpl testnet account opened from the
+   web app is credited with testnet AUSD → withdraw in the app → transfer to the agent wallet.
 5. **Nansen signals, run live**: perp-trades returns `side` (not `position_side`) and includes reduces/closes, so the
    first live run read $0 everywhere. Fixed: `side` with fallback, opens/adds only, and a conviction weight
    (full at $100k opened and 3 trades) so a single $98 open no longer yields a full-size suggestion. Smart-money
    netflow returns nothing for Monad (with or without label filters), so netflow now scans Monad + Ethereum, Base,
    Arbitrum, Solana in the same call. Cost: 5 credits per feed; free tier = 10 credits/day.
-4. **No testnet AUSD faucet** (confirmed by Perpl on Discord). Route used: a Perpl testnet account opened from the
-   web app is credited with testnet AUSD → withdraw in the app → transfer to the agent wallet.
 
 ## Still to run live
 
