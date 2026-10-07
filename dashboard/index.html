@@ -77,6 +77,7 @@ tr.flag td{background:var(--bad-soft)}
 .alerts li b{color:var(--bad)}
 a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 .grid2{display:grid;grid-template-columns:1fr;gap:28px}
+.grid2>section{min-width:0}
 @media (min-width:980px){.grid2{grid-template-columns:1.2fr 1fr}}
 .progress{font-size:12.5px;color:var(--muted);padding:8px 14px;border-top:1px solid var(--line)}
 footer{margin-top:36px;color:var(--muted);font-size:13px;line-height:1.6}
@@ -144,8 +145,8 @@ footer{margin-top:36px;color:var(--muted);font-size:13px;line-height:1.6}
       <h2>Markets <span class="hint">on-chain state of every Perpl perpetual</span></h2>
       <div class="card tablewrap">
         <table>
-          <thead><tr><th>Market</th><th>Mark</th><th>OI long</th><th>OI short</th><th>Funding</th><th>Max lev.</th><th>Maint.</th></tr></thead>
-          <tbody id="markets"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+          <thead><tr><th>Market</th><th>Mark</th><th>Open interest</th><th>Funding</th><th>Max lev.</th><th>Maint.</th></tr></thead>
+          <tbody id="markets"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
         </table>
       </div>
     </section>
@@ -183,6 +184,7 @@ const EVENTS = [
   parseAbiItem("event PositionClosed(uint256 perpId, uint256 accountId, uint8 positionType, uint256 pricePNS, int256 deltaPnlCNS, int256 fundingCNS)"),
   parseAbiItem("event PositionLiquidated(uint256 perpId, uint256 posAccountId, uint8 positionType, uint256 markPricePNS, uint256 liqPricePNS, uint256 liqLotLNS, uint256 posLotLNS, int256 deltaPnlCNS, int256 fundingCNS, int256 posAmountCNS, uint256 posDepositCNS, int256 accAmountCNS, uint256 accBalanceCNS, bool onOrderBook)"),
   parseAbiItem("event CollateralDeposit(uint256 accountId, uint256 amountCNS, uint256 balanceCNS)"),
+  parseAbiItem("event AccountCreated(address account, uint256 id)"),
   parseAbiItem("event CollateralWithdrawal(uint256 accountId, uint256 amountCNS, uint256 balanceCNS)"),
 ];
 
@@ -332,11 +334,11 @@ function renderPositions(positions) {
 
 function renderMarkets(live) {
   $("markets").innerHTML = live.filter((p) => p.info).map((p) => {
-    const v = p.info, mark = scale(v.markPNS, p.pd), oiL = scale(v.longOpenInterestLNS, p.ld), oiS = scale(v.shortOpenInterestLNS, p.ld);
+    const v = p.info, mark = scale(v.markPNS, p.pd), oi = Math.max(scale(v.longOpenInterestLNS, p.ld), scale(v.shortOpenInterestLNS, p.ld));
     const fr = Number(v.fundingRatePct100k) / 1000; // percent per funding interval
-    return `<tr><td><strong>${esc(v.symbol)}</strong></td><td>${fmt(mark, p.pd)}</td><td>${fmt(oiL * mark, 0)}</td><td>${fmt(oiS * mark, 0)}</td>
+    return `<tr><td><strong>${esc(v.symbol)}</strong></td><td>${fmt(mark, p.pd)}</td><td>$${fmt(oi * mark, 0)}</td>
       <td class="${cls(fr)}">${fmtSigned(fr, 3)}%</td><td>${p.initHdths ? fmt(p.initHdths / 100, 0) + "x" : "—"}</td><td>${p.maintHdths ? fmt(100 / p.maintHdths * 100, 1) + "%" : "—"}</td></tr>`;
-  }).join("") || `<tr><td colspan="7" class="empty">No market.</td></tr>`;
+  }).join("") || `<tr><td colspan="6" class="empty">No market.</td></tr>`;
 }
 
 // ---- activity: Perpl events carry no indexed account, so scan logs in 100-block windows and filter client-side
@@ -347,7 +349,7 @@ async function scanRange(from, to) {
   const logs = await client.request({ method: "eth_getLogs", params: [{ address: net.exchange, fromBlock: "0x" + from.toString(16), toBlock: "0x" + to.toString(16) }] });
   for (const l of logs) {
     const ev = decode(l); if (!ev) continue;
-    const a = ev.args, accId = a.accountId ?? a.posAccountId;
+    const a = ev.args, accId = a.accountId ?? a.posAccountId ?? a.id;
     if (!account || accId !== account.id) continue;
     const key = `${l.transactionHash}:${l.logIndex}`;
     if (events.has(key)) continue;
@@ -370,6 +372,7 @@ async function renderActivity() {
     if (r.name.startsWith("PositionOpened")) { tag = `<span class="tag open">Opened</span>`; price = fmt(scale(r.a.pricePNS, p?.pd ?? 0), p?.pd ?? 2); size = `${fmt(scale(r.a.lotLNS, p?.ld ?? 0), p?.ld ?? 4)} @ ${fmt(Number(r.a.leverageHdths) / 100, 1)}x`; }
     else if (r.name === "PositionClosed") { tag = `<span class="tag close">Closed</span>`; price = fmt(scale(r.a.pricePNS, p?.pd ?? 0), p?.pd ?? 2); const v = scale(r.a.deltaPnlCNS, collDec) + scale(r.a.fundingCNS, collDec); pnl = `<span class="${cls(v)}">${fmtSigned(v)}</span>`; }
     else if (r.name === "PositionLiquidated") { tag = `<span class="tag liq">Liquidated</span>`; price = fmt(scale(r.a.liqPricePNS, p?.pd ?? 0), p?.pd ?? 2); size = fmt(scale(r.a.liqLotLNS, p?.ld ?? 0), p?.ld ?? 4); const v = scale(r.a.deltaPnlCNS, collDec); pnl = `<span class="${cls(v)}">${fmtSigned(v)}</span>`; }
+    else if (r.name === "AccountCreated") { tag = `<span class="tag dep">Account created</span>`; size = `#${r.a.id}`; }
     else { tag = `<span class="tag dep">${r.name === "CollateralDeposit" ? "Deposit" : "Withdrawal"}</span>`; size = `${fmt(scale(r.a.amountCNS, collDec))} AUSD`; }
     return `<tr><td>${esc(when)}</td><td>${tag}</td><td>${p ? esc(p.symbol) : "—"}</td><td>${side ? `<span class="side ${side}">${side}</span>` : ""}</td><td>${price}</td><td>${size}</td><td>${pnl}</td>
       <td><a href="${net.explorer}/tx/${r.tx}" target="_blank" rel="noopener">${short(r.tx)}</a></td></tr>`;
