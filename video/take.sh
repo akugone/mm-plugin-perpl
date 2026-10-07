@@ -8,7 +8,9 @@ mode="${1:-rehearsal}"
 export PERPL_CHAIN_ID=10143
 
 if [[ "$mode" == "real" && -z "${NANSEN_API_KEY:-}" ]]; then
-  echo "NANSEN_API_KEY is not set. Run:  read -s NANSEN_API_KEY && export NANSEN_API_KEY" >&2; exit 1
+  read -r -s -p "Paste your Nansen API key (hidden), then Enter: " NANSEN_API_KEY; echo
+  [[ -n "$NANSEN_API_KEY" ]] || { echo "No key entered." >&2; exit 1; }
+  export NANSEN_API_KEY
 fi
 mm perpl guard --reset >/dev/null
 positions=$(mm perpl positions --json | python3 -c 'import json,sys; print(json.load(sys.stdin)["data"]["totals"]["count"])')
