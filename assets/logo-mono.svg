@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" rx="220" fill="#191919"/>
+  <!-- guard: shield outline -->
+  <path d="M512 168 L776 262 V498 C776 668 664 782 512 850 C360 782 248 668 248 498 V262 Z" fill="none" stroke="#ffffff" stroke-width="44" stroke-linejoin="round"/>
+  <!-- perps: candles -->
+  <g fill="#ffffff" fill-opacity=".38">
+    <rect x="356" y="520" width="44" height="96" rx="9"/>
+    <rect x="450" y="452" width="44" height="122" rx="9"/>
+    <rect x="544" y="388" width="44" height="134" rx="9"/>
+  </g>
+  <g stroke="#ffffff" stroke-opacity=".38" stroke-width="9" stroke-linecap="round">
+    <line x1="378" y1="488" x2="378" y2="646"/>
+    <line x1="472" y1="420" x2="472" y2="604"/>
+    <line x1="566" y1="356" x2="566" y2="552"/>
+  </g>
+  <!-- agent: rising arrow -->
+  <path d="M384 650 L472 566 L550 616 L666 476" fill="none" stroke="#ffffff" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M610 466 L674 462 L670 526" fill="none" stroke="#ffffff" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
