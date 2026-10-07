@@ -181,29 +181,55 @@ dashboard updating, the human's view, close.
 
 ---
 
-## 3. Pitch — max 2:00 (field "Pitch video")
+## 3. Pitch — 2:00 (field "Pitch video": team, problem, why)
 
-Face camera or voice over 3–4 simple visuals. Team, problem, why.
+Face camera for the first and last 15 seconds; voice-over on visuals in between. No terminal walkthrough here: the
+demo videos do that. ≈ 250 words, read calmly.
 
-> **(0:00) Who.** "I'm Martin, developer relations at iExec, building agent tooling. I maintain the MetaMask plugin
-> for Hermes Agent, now in Nous Research's official catalog, and this is my Metropolis build."
->
-> **(0:15) Problem.** "AI agents are getting wallets, and MetaMask's Agent Wallet is the one people trust: keys in
-> MetaMask, every transaction checked and 2FA'd. But agents still can't trade safely. On a perps exchange, orders go
-> through an API key, so the wallet's safety net never sees them. One bad loop, one hallucinated size, and the
-> account is gone."
->
-> **(0:45) Solution.** "mm-plugin-perpl adds perps on Perpl, Monad's on-chain exchange, to the MetaMask Agent
-> Wallet, with a guard built for the gap: per-order and daily caps, leverage limits, allowed markets, and human
-> confirmation. The wallet sets up the account and authorises a trade-only key that can never withdraw. Then the
-> agent trades, monitors risk, and asks you before anything it shouldn't do alone."
->
-> **(1:15) Why now, why Monad.** "MetaMask opened plugins in September, and the ecosystem is empty. Monad gives
-> perps the speed and cost that make agent trading practical, and Perpl's API makes order forwarding gasless for
-> the agent. Every agent user is a new Perpl account and recurring volume."
->
-> **(1:40) Ask.** "It's live on Monad testnet today and open source. Next: npm release, Hermes recipes for
-> Telegram risk alerts, and mainnet. Thanks!"
+### Visuals to prepare
+
+1. **Logo** (`assets/logo.png`) on a plain background, or you on camera.
+2. **The gap, as one diagram** (three boxes and two arrows is enough):
+   `Agent → mm (MetaMask Agent Wallet) → wallet transactions ✓ policy · Blockaid · 2FA`
+   `Agent → Perpl API key → orders ✗ invisible to the wallet` → then the guard box appears in between.
+3. **A screenshot of the guard refusing** the $500 / 10x order (terminal).
+4. **The dashboard** with a position open and a red alert (account #710 works:
+   https://perpl-agent-monitor.vercel.app/?address=0x829114e33afF5E7682346300Ff1525Cbd3a8DE17).
+5. **Proof**: the explorer page of the agent wallet, or the README's "verified live" status block.
+
+### Script
+
+**0:00–0:15 — Who** *(on camera)*
+> "Hi, I'm Martin. I work with builders at iExec, and I build tooling for AI agents that handle money: the MetaMask
+> wallet plugin for Hermes Agent, now in Nous Research's official catalog, and Leash, permissions for trading
+> agents, at ETHGlobal Tokyo. This is my Metropolis build, and I'm building it solo."
+
+**0:15–0:45 — Problem** *(visual 2: the diagram, without the guard box)*
+> "AI agents are getting wallets, and MetaMask's Agent Wallet is the one people trust: the key stays in MetaMask,
+> and every transaction is simulated, scanned and checked against a policy. But the moment an agent trades perps,
+> that safety net disappears. Orders go through an exchange API key, not through the wallet. One bad loop, one
+> misread size, and the account is gone, and the wallet never saw it coming."
+
+**0:45–1:15 — Solution** *(visual 2 with the guard box, then visual 3, then visual 4)*
+> "mm-plugin-perpl adds perpetuals on Perpl, Monad's on-chain exchange, to the MetaMask Agent Wallet, and closes
+> that gap. The wallet opens the account and signs a key that can trade but never withdraw. Every order then goes
+> through a guard built like MetaMask's own: a cap per order and per day, leverage limits, and a human yes. And
+> while the agent trades, the human watches positions and liquidation risk live."
+
+**1:15–1:40 — Why now, why Monad** *(visual 5)*
+> "MetaMask opened plugins a few weeks ago, and almost nothing trades through them yet. Monad makes perps fast and
+> cheap enough for an agent to trade like a person would, and Perpl forwards orders without gas. Every agent that
+> uses this is a new Perpl account and real order flow."
+
+**1:40–2:00 — Where it stands, what's next** *(on camera)*
+> "It's open source and live on Monad testnet today: account, key, orders, risk and Nansen signals, all through the
+> wallet. Next: publish on npm, Telegram risk alerts for Hermes, and mainnet. Thanks for watching."
+
+### Before recording
+
+- Check the two facts in "Who" and adjust the wording to how you present yourself (role at iExec, the Hermes
+  catalog status, Leash at ETHGlobal Tokyo). Say "solo" only if nobody else joins the team before the deadline.
+- Don't name dollar amounts or user numbers you can't show.
 
 ---
 
