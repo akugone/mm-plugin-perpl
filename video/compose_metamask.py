@@ -55,7 +55,7 @@ def plan(take):
         {"name": "custody", "layout": "term", "start": t(addr) - C.typing(addr), "end": c[0], "beat": "custody", "frame": c[0] - 0.3, "mode": "output", "max_h": 800},
         {"name": "policy", "layout": "term", "start": c[0], "end": c[1], "beat": "policy", "frame": c[1] - 0.3, "mode": "output"},
         {"name": "deposit-intent", "layout": "term", "start": c[1], "end": t(deposit) + 4.0, "beat": "deposit", "frame": t(deposit) + 3.5, "mode": "typing", "typing_h": 560},
-        {"name": "deposit-out", "layout": "term", "start": t(deposit) + 4.0, "end": c[2], "beat": "deposit", "frame": c[2] - 0.3, "mode": "output", "max_h": 1000},
+        {"name": "deposit-out", "layout": "term", "start": t(deposit) + 4.0, "end": c[2], "beat": "deposit", "frame": c[2] - 0.3, "mode": "output", "max_h": 760},
         {"name": "requests", "layout": "term", "start": c[2], "end": c[3], "beat": "requests", "frame": c[3] - 0.3, "mode": "output"},
         {"name": "enroll", "layout": "term", "start": c[3], "end": c[4], "beat": "enroll", "frame": c[4] - 0.3, "mode": "output", "max_h": 1000},
         {"name": "agent-500", "layout": "term", "start": c[4], "end": c[5], "beat": "a500", "frame": c[5] - 0.3, "mode": "output"},
