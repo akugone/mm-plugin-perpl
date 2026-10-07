@@ -72,7 +72,7 @@ Rejected on purpose: Envio, Kuru, Privy, Dynamic, Mera, Agora, Chainlink, Aurora
 
 ## Dashboard (2026-10-07)
 
-`dashboard/index.html` → https://perpl-agent-monitor.vercel.app/ (GitHub Pages, workflow `pages.yml`). Verified on
+`dashboard/index.html` → https://perpl-agent-monitor.vercel.app/ (Vercel project `perpl-agent-monitor`). Verified on
 account 958 (history: account created, deposit 1000, BTC long opened 83 734.3, closed 83 698.4) and on a third-party
 testnet account with 3 open longs (BTC 14x, ETH 12x, SOL 5x): positions, PnL and 4 risk alerts render; liquidation
 distances match Perpl's rules (BTC 14x with 4 % maintenance → ~3.3 %). Perpl's REST API sends no CORS headers, so

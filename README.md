@@ -172,8 +172,7 @@ Everything is read from the Perpl Exchange contract through the public Monad RPC
 `getPerpetualInfoV2`, `getMarginFractions`, events): no API key, no backend, nothing stored. Perpl's events don't index
 the account, and the public RPC caps `eth_getLogs` at 100 blocks, so the activity feed scans the last ~20 minutes
 then stays live; `?from=<block>` scans further back (e.g. `?from=68939700` shows this wallet's first trade). Single
-static file: `dashboard/index.html`, deployed on Vercel (`cd dashboard && vercel deploy --prod`; a GitHub Pages mirror is
-built by `.github/workflows/pages.yml`).
+static file: `dashboard/index.html`, deployed on Vercel (`cd dashboard && vercel deploy --prod`).
 
 ## Risk monitoring from cron
 
