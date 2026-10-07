@@ -91,43 +91,93 @@ mm perpl close --market BTC
 
 ---
 
-## 2. MetaMask bounty demo — max 5:00 (field "Submit a demo video … showing real flows")
+## 2. MetaMask cut — ~4:15 (MetaMask bounty field "Submit a demo video (up to 5 mins) showing real flows")
 
-Requirement: all transactions go through the Agent Wallet, no key handling, no bypass of signing, policy or MFA.
-Reuse the main demo and add the wallet-side flows in front of it.
+What MetaMask's judges check: *all transactions go through the Agent Wallet — no key/token handling, no bypass of
+signing, policy, or MFA*. So this cut puts the wallet side first, then reuses the trading loop of the main demo.
 
-**0:00–0:30 — Custody** *(terminal)*
+### Setup
+
+Same as the main demo (`PERPL_CHAIN_ID`, guard reset, account flat, dashboard on the right), plus:
+
+- A second browser tab on the agent wallet's explorer page:
+  https://testnet.monadscan.com/address/0x62Fe7760f9462D766af38EccfA4B5889d9FA32Ab
+- `package.json` open in your editor, scrolled to the `"mm"` block (the manifest with per-command capabilities).
+- `~/.config/mm-plugin-perpl/credentials.json` must **not** be shown on screen.
+- Optional, for the strongest shot: record the **install consent** beforehand, in a separate take —
+  `mm plugins uninstall mm-plugin-perpl`, then `mm plugins install "file:$PWD"` *without* `--accept-permissions`,
+  and film MetaMask's consent prompt listing the capabilities. Re-install with the README's procedure afterwards.
+
+### Script
+
+**0:00–0:20 — Hook** *(terminal full screen)*
+> "MetaMask's Agent Wallet lets an AI agent hold funds without ever holding keys. mm-plugin-perpl gives that wallet
+> a trading superpower: perpetuals on Perpl, Monad's on-chain exchange. And every wallet action still goes through
+> MetaMask."
+
+**0:20–0:50 — Custody and policy**
 ```bash
 mm wallet address
 mm wallet policy get
 ```
-> "A MetaMask server wallet: keys in MetaMask's TEE, a policy with allowed chains and a 24-hour outflow limit. The
-> plugin only ever asks this wallet to act through the plugin SDK's walletExecutor."
+> "This is a MetaMask server wallet: the key lives in MetaMask's secure enclave, not on this machine. Its policy
+> lists the allowed chains, Monad testnet included, and a rolling 24-hour outflow limit. The plugin can't change
+> any of this."
 
-**0:30–1:10 — Capabilities, by design** *(show `package.json` › `mm.commands`, or read them out)*
-> "Only setup, deposit and enroll request wallet-submit. Trading commands only need wallet-read. Markets, guard and
-> signals request nothing at all."
+**0:50–1:20 — Least privilege, enforced by mm** *(editor: `package.json` › `"mm"`; or the consent take)*
+> "The plugin declares a capability per command, and mm enforces it after the user consents at install. Only
+> setup, deposit and enroll may submit through the wallet. Trading commands only read the wallet's address.
+> Markets, guard and signals get no wallet access at all. Reading the seed or changing mm's config is refused by
+> design."
 
-**1:10–2:00 — Wallet transactions through MetaMask's pipeline**
+**1:20–2:05 — Wallet transactions through MetaMask's pipeline** *(terminal)*
 ```bash
-mm perpl deposit --chain-id 10143 --amount 100
+mm perpl deposit --amount 50
 ```
-> "Adding collateral is two wallet transactions, approve then depositCollateral, each simulated, scanned by
-> Blockaid, checked against the policy, and 2FA'd when the policy says so."
-*(If MetaMask sends a 2FA e-mail, show it and approve it on camera: it's the best possible shot for this bounty.)*
+> "Adding collateral is two wallet transactions: approve, then deposit. Look at the lines starting with
+> 'Intent': that's MetaMask describing what it is about to sign. The plugin never builds a signature: it hands
+> the transaction to the wallet executor, and MetaMask simulates it, scans it with Blockaid, checks the policy,
+> and asks for 2FA when the policy requires it."
 
-**2:00–2:40 — Wallet signature for a trade-only key** *(optional: re-run `enroll --force` only if you want to show it live)*
+*(If a 2FA e-mail arrives, show it and approve it on camera. On testnet the AUSD token has no price, so the USD
+outflow limit usually doesn't trigger; say: "on testnet this token is unpriced, so no 2FA here; on mainnet the
+outflow limit would ask me".)*
+
+*(Switch to the explorer tab, refresh: the approve and the deposit appear, sent by the agent wallet.)*
+> "Both transactions, sent by the agent wallet itself."
+
+**2:05–2:40 — A signature for a trade-only key**
 ```bash
-mm perpl enroll --chain-id 10143 --force
+mm perpl enroll --force
 ```
-> "The API key is authorised by an EIP-712 signature from the MetaMask wallet. The key is trade-only: Perpl API
-> keys can never withdraw. It expires in 30 days and is stored 0600."
+> "To trade without a transaction per order, Perpl uses API keys. The plugin generates one locally, and MetaMask
+> signs Perpl's EIP-712 authorisation: again through the wallet, again subject to its policy. The key can trade
+> but can never withdraw: that's a Perpl rule, not a promise of mine. It expires in 30 days."
 
-**2:40–4:20 — Trading loop** — the main demo from 0:30 to 1:55 (guard refusal, order + dashboard, close).
+*(`--force` replaces the stored key; the old one simply expires. Don't scroll to the stored path's contents.)*
 
-**4:20–4:40 — Agent skill** *(show `skills/perpl-trading/SKILL.md` on GitHub)*
-> "A bundled skill teaches any agent the safe flow: confirm the exact order before --yes, never raise a cap on its
-> own. Works with Hermes, Claude Code, Codex and Cursor."
+**2:40–2:55 — The gap, and how the plugin closes it** *(terminal + dashboard, split screen from here)*
+> "Orders signed by that key don't go through the wallet, so MetaMask's Guard Mode can't see them. That's why the
+> plugin ships its own guard, shaped like Guard Mode: a cap per order, a rolling 24-hour cap like the outflow
+> limit, leverage and market allowlists, and a human yes on every order."
+
+**2:55–4:20 — Trading loop** — the main demo from 0:30 to 1:55: guard refusal, real order with confirmation and the
+dashboard updating, the human's view, close.
+
+**4:20–4:40 — Any agent** *(browser: `skills/perpl-trading/SKILL.md` on GitHub)*
+> "A bundled skill teaches any agent driving mm the safe flow — Hermes, Claude Code, Codex, Cursor: confirm the
+> exact order with the user before adding --yes, and never raise a limit on its own."
+
+**4:40–4:50 — Outro**
+> "Keys in MetaMask, transactions through MetaMask, and a guard where MetaMask can't see. mm-plugin-perpl."
+
+### Notes
+
+- Total ≈ 4:50 with the reused loop; trim the hook or the skill shot if the cut runs over 5:00.
+- Never show `credentials.json`, the Nansen key, or the `enroll` output's key material (mm already masks it, but
+  don't linger on it).
+- The deposit adds 50 AUSD to account 958: harmless, and it makes the "Deposit" row appear in the dashboard's
+  activity feed if the browser is visible.
 
 ---
 
