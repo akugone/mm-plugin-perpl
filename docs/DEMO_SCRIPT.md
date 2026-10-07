@@ -63,7 +63,7 @@ mm perpl close --chain-id 10143 --market BTC
 ```
 > "Closing never hits the notional caps, because it reduces risk, but it still asks for confirmation. Closed."
 
-**2:25–2:45 (alternative) — The human's view** *(browser: akugone.github.io/mm-plugin-perpl, with a position open)*
+**2:25–2:45 (alternative) — The human's view** *(browser: perpl-agent-monitor.vercel.app, with a position open)*
 > "And this is what the human sees while the agent trades: live positions, PnL, and how far each one is from
 > liquidation, straight from the Perpl contract."
 
@@ -146,7 +146,7 @@ video 1 from 0:55 to 2:45 (guard refusal, real order, positions/risk, close), en
 showing the open and the close.
 
 **Best Analytics / Risk Tool** ("walking through your dashboard features"):
-1. *(0:00)* Open https://akugone.github.io/mm-plugin-perpl/ with a position open on the agent wallet (open one with
+1. *(0:00)* Open https://perpl-agent-monitor.vercel.app/ with a position open on the agent wallet (open one with
    `mm perpl order` just before recording). "The agent's account: equity, free and posted collateral, PnL."
 2. *(0:25)* Positions table: margin ratio, maintenance margin, estimated liquidation and distance bar.
 3. *(0:50)* Risk alerts: open a higher-leverage position (within your guard, e.g. raise `--max-leverage` on purpose and

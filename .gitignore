@@ -4,3 +4,4 @@ oclif.manifest.json
 .DS_Store
 *.tgz
 .env
+.vercel

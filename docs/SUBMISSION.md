@@ -31,7 +31,7 @@ Because Perpl orders go through an API key and not through the wallet, MetaMask'
 - `mm perpl positions` and `mm perpl risk`: PnL, margin ratio and estimated liquidation price and distance. `risk --json` returns `ok:false` plus `alerts[]` when a threshold is crossed, so a cron job or an agent can relay it to Telegram.
 - `mm perpl signals`: Nansen smart-money spot netflow (Monad, Ethereum, Base, Arbitrum, Solana) plus smart-money perp positioning, weighted by conviction, turned into a bias, a score, human-checkable evidence and a suggested order already sized by the guard. It never places an order itself.
 - `mm perpl status` always answers with the exact next step, so an agent can onboard a user end to end.
-- **Perpl Agent Monitor** (https://akugone.github.io/mm-plugin-perpl/): the human's view while the agent trades. Live equity, positions, PnL, estimated liquidation and alerts, plus the account's activity feed, read straight from the Perpl contract with no API key and no backend.
+- **Perpl Agent Monitor** (https://perpl-agent-monitor.vercel.app/): the human's view while the agent trades. Live equity, positions, PnL, estimated liquidation and alerts, plus the account's activity feed, read straight from the Perpl contract with no API key and no backend.
 
 **Built for agents**
 
@@ -95,4 +95,4 @@ https://github.com/akugone/mm-plugin-perpl
 
 ## Perpl Analytics / Risk Tool bounty — dashboard link
 
-https://akugone.github.io/mm-plugin-perpl/
+https://perpl-agent-monitor.vercel.app/
