@@ -6,6 +6,7 @@
   python3 make_tape.py metamask real        -> out/metamask/take.tape : wallet custody, a REAL deposit and re-enroll,
                                                then the agent trades in plain English (REAL order and close)
   python3 make_tape.py metamask rehearsal   -> same rhythm; dry-run deposit, read-only agent (order/close denied)
+  python3 make_tape.py nansen real          -> out/nansen/take.tape : the agent asks for smart-money ideas (1 Nansen call)
 
 The shell logs when each command starts and ends (hooks.zsh); compose.mjs uses that log to cut the shots, sync the
 dashboard capture and time the subtitles. Sleeps below give each shot the time its narration needs.
@@ -15,8 +16,8 @@ import sys
 
 video = sys.argv[1] if len(sys.argv) > 1 else "main"
 mode = sys.argv[2] if len(sys.argv) > 2 else "rehearsal"
-if video not in ("main", "metamask") or mode not in ("real", "rehearsal"):
-    sys.exit("usage: make_tape.py main|metamask real|rehearsal")
+if video not in ("main", "metamask", "nansen") or mode not in ("real", "rehearsal"):
+    sys.exit("usage: make_tape.py main|metamask|nansen real|rehearsal")
 
 here = os.path.dirname(os.path.abspath(__file__))
 theme = (
@@ -112,7 +113,16 @@ def metamask_tape():
     return lines
 
 
-lines = main_tape() if video == "main" else metamask_tape()
+def nansen_tape():
+    # one Nansen call (10 credits): the agent runs signals and presents them; rehearsal asks for status instead.
+    # Read-only agent either way: nothing to trade in this clip.
+    setup = f"export PATH={here}/agent:$PATH AGENT_SETTINGS=demo-settings-readonly.json; agent --new; "
+    ask = ('agent "Any smart-money ideas on BTC, ETH or SOL? Keep it short."' if mode == "real"
+           else 'agent "What is my Perpl status? Keep it short."')
+    return header(setup) + ["Sleep 5s", *cmd(ask, after="16s")]
+
+
+lines = {"main": main_tape, "metamask": metamask_tape, "nansen": nansen_tape}[video]()
 take = os.path.join(here, "out", video)
 os.makedirs(take, exist_ok=True)
 path = os.path.join(take, "take.tape")

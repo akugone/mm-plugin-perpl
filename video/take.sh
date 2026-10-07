@@ -4,6 +4,7 @@
 #   ./take.sh main real             signals + guard refusal + a REAL $20 order + a REAL close on Monad testnet
 #   ./take.sh metamask rehearsal    wallet reads, dry-run deposit, a read-only agent (order/close denied)
 #   ./take.sh metamask real         a REAL deposit and re-enroll, then the agent places and closes a REAL $20 order
+#   ./take.sh nansen real           the agent asks for smart-money ideas (one Nansen call, 10 credits; nothing traded)
 set -euo pipefail
 cd "$(dirname "$0")"
 video="${1:-main}"
@@ -11,7 +12,7 @@ mode="${2:-rehearsal}"
 export TAKE_DIR="$(pwd)/out/$video"
 export PERPL_CHAIN_ID=10143
 
-if [[ "$video" == "main" && "$mode" == "real" && -z "${NANSEN_API_KEY:-}" ]]; then
+if [[ ( "$video" == "main" || "$video" == "nansen" ) && "$mode" == "real" && -z "${NANSEN_API_KEY:-}" ]]; then
   read -r -s -p "Paste your Nansen API key (hidden), then Enter: " NANSEN_API_KEY; echo
   [[ -n "$NANSEN_API_KEY" ]] || { echo "No key entered." >&2; exit 1; }
   [[ "$NANSEN_API_KEY" == nsn_* ]] || { echo "That doesn't look like a Nansen key (it should start with nsn_)." >&2; exit 1; }
@@ -26,7 +27,11 @@ fi
 
 python3 make_tape.py "$video" "$mode"
 node record.mjs
-if [[ "$video" == "main" ]]; then .venv/bin/python compose.py; name=demo-main; else .venv/bin/python compose_metamask.py; name=demo-metamask; fi
+case "$video" in
+  main) .venv/bin/python compose.py; name=demo-main ;;
+  metamask) .venv/bin/python compose_metamask.py; name=demo-metamask ;;
+  nansen) .venv/bin/python compose_nansen.py; name=demo-nansen ;;
+esac
 echo
 echo "Video: $(pwd)/out/$name.mp4"
 echo "Subtitles: $(pwd)/out/$name.srt"
