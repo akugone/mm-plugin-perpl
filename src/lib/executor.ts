@@ -9,6 +9,62 @@ import type { Address, Hex } from "viem";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Executor = (req: any, opts?: any) => Promise<any>;
 
+/** The slice of the host's viem public client the pre-flight needs (ctx.publicClient(chainId)). */
+export type ReadClient = {
+  call(args: { account: Address; to: Address; data: Hex }): Promise<unknown>;
+  waitForTransactionReceipt(args: { hash: Hex; timeout?: number }): Promise<unknown>;
+};
+
+const KNOWN_REVERTS: Record<string, { why: string; hint: string }> = {
+  "0xfb8f41b2": { why: "the AUSD allowance is too low (ERC20InsufficientAllowance)", hint: "Run it again without --skip-approve: the approve step sets the allowance." },
+  "0xe450d38c": { why: "the wallet's AUSD balance is too low (ERC20InsufficientBalance)", hint: "Fund the agent wallet with AUSD first; check with mm wallet balance." },
+  "0x03a0e277": { why: "this wallet has no Perpl exchange account (AccountDoesNotExist)", hint: "Run mm perpl setup --deposit <AUSD> first." },
+};
+
+/** Finds the revert payload in a viem/JSON-RPC error chain, if the failure was a revert at all. */
+export function revertData(e: unknown): Hex | undefined {
+  let cur: unknown = e;
+  for (let depth = 0; depth < 8 && cur; depth++) {
+    const c = cur as { data?: unknown; cause?: unknown };
+    if (typeof c.data === "string" && /^0x[0-9a-fA-F]{8}/.test(c.data)) return c.data as Hex;
+    const inner = (c.data as { data?: unknown } | undefined)?.data;
+    if (typeof inner === "string" && /^0x[0-9a-fA-F]{8}/.test(inner)) return inner as Hex;
+    cur = c.cause;
+  }
+  return undefined;
+}
+
+/**
+ * Simulates a wallet transaction from the agent wallet before handing it to MetaMask. A transaction that would revert
+ * is stopped here with the decoded reason; otherwise mm falls back to a huge gas limit and reports a misleading
+ * "insufficient native balance". RPC failures that are not reverts are left to MetaMask's own pipeline.
+ */
+export async function preflight(client: ReadClient, from: Address, tx: { to: Address; data: Hex }, summary: string): Promise<void> {
+  try {
+    await client.call({ account: from, to: tx.to, data: tx.data });
+  } catch (e) {
+    const data = revertData(e);
+    const reverted = data !== undefined || /revert/i.test(String((e as Error)?.message ?? ""));
+    if (!reverted) return;
+    const known = data ? KNOWN_REVERTS[data.slice(0, 10).toLowerCase()] : undefined;
+    throw new CommandError(
+      "TX_WOULD_REVERT",
+      `${summary}: this transaction would fail on chain (${known?.why ?? (data ? `custom error ${data.slice(0, 10)}` : "execution reverted")}). Nothing was signed or sent.`,
+      known?.hint ?? "Check the inputs and the wallet's balances, then try again.",
+    );
+  }
+}
+
+/** Waits for a previous step to land so the next step's pre-flight sees its effect (an approval, a new account). */
+export async function settled(client: ReadClient, hash: string | undefined): Promise<void> {
+  if (!hash) return;
+  try {
+    await client.waitForTransactionReceipt({ hash: hash as Hex, timeout: 60_000 });
+  } catch {
+    // MetaMask's pipeline still guards the next step; the pre-flight just loses its view of this one.
+  }
+}
+
 export type StepResult = {
   status?: string;
   hash?: string;

@@ -72,6 +72,11 @@ Rejected on purpose: Envio, Kuru, Privy, Dynamic, Mera, Agora, Chainlink, Aurora
 6. **Maintenance margin unit**: `maintenance_margin` is a leverage in hundredths (the contract's `maintMarginFracHdths`,
    MMR = notional / MMF): BTC 2500 = 25x = 4 %, as in Perpl's docs. The plugin read it as basis points (25 %), which
    made liquidation estimates far too conservative. Fixed, with a test pinned to the docs' table.
+7. **A transaction that would revert got a misleading error from mm**: when gas estimation reverts, mm falls back to a
+   142.5M gas limit and refuses with "insufficient native balance" (15 MON needed). `setup` and `deposit` now simulate
+   each step from the agent wallet first (public Monad RPC: mm's own public client for 10143 also goes through the
+   proxy), wait for the previous step to land, and stop with `TX_WOULD_REVERT` and the decoded reason
+   (e.g. ERC20InsufficientAllowance). Nothing is signed or sent in that case.
 
 ## Dashboard (2026-10-07)
 

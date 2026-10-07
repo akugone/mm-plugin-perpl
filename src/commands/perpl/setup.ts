@@ -1,6 +1,6 @@
 import { type CommandIO, CommandError, InputFieldType, type InputSchema, PluginCommand, schemaToArgs, schemaToFlags } from "@metamask/agent-wallet/plugin";
-import { type Address, encodeFunctionData, getAddress } from "viem";
-import { type Executor, type StepResult, submitTransaction } from "../../lib/executor.js";
+import { type Address, createPublicClient, encodeFunctionData, getAddress, http } from "viem";
+import { type Executor, preflight, type ReadClient, settled, type StepResult, submitTransaction } from "../../lib/executor.js";
 import { decimalFlag } from "../../lib/inputs.js";
 import { network } from "../../lib/perpl/config.js";
 import { erc20Abi, exchangeAbi } from "../../lib/perpl/contracts.js";
@@ -105,12 +105,17 @@ export default class PerplSetup extends PluginCommand<SetupResult> {
     if (r.dryRun) return result;
 
     const executor = (await this.ctx.walletExecutor(io, this.pluginCommandId)) as Executor;
+    const client = createPublicClient({ transport: http(process.env.PERPL_RPC_URL || net.rpc) }) as unknown as ReadClient;
+    let previous: string | undefined;
     for (const s of steps) {
       if (s.skipped) continue;
       io.progress(s.summary);
+      await settled(client, previous);
+      await preflight(client, owner as Address, { to: s.to, data: s.calldata }, s.summary);
       const out = await submitTransaction(executor, chainId, { to: s.to, data: s.calldata }, { action: "custom", summary: s.summary, details: { step: s.step, exchange } });
       io.progress(undefined);
       Object.assign(s, out);
+      previous = out.hash;
       const terminalOk = out.hash || out.status === "CONFIRMED" || out.status === "BROADCASTED";
       if (!terminalOk) {
         // Stop at the first step that did not go through (MFA pending, denied, failed) — the next steps depend on it.

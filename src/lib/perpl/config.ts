@@ -10,6 +10,8 @@ export type Network = {
   ws: string;
   explorer: string;
   appUrl: string;
+  /** Public RPC for read-only simulation (mm's own client routes 10143 through a proxy that rejects it). */
+  rpc: string;
 };
 
 export const NETWORKS: Record<number, Network> = {
@@ -20,6 +22,7 @@ export const NETWORKS: Record<number, Network> = {
     ws: "wss://app.perpl.xyz",
     explorer: "https://monadscan.com",
     appUrl: "https://app.perpl.xyz",
+    rpc: "https://rpc.monad.xyz",
   },
   10143: {
     chainId: 10143,
@@ -28,6 +31,7 @@ export const NETWORKS: Record<number, Network> = {
     ws: "wss://testnet.perpl.xyz",
     explorer: "https://testnet.monadscan.com",
     appUrl: "https://testnet.perpl.xyz",
+    rpc: "https://testnet-rpc.monad.xyz",
   },
 };
 
