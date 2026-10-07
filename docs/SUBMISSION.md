@@ -12,36 +12,26 @@ A MetaMask Agent Wallet plugin that lets any AI agent trade perpetuals on Perpl 
 
 ## Description
 
-AI agents are getting wallets. MetaMask shipped the Agent Wallet CLI (`mm`) in August 2026: keys stay in MetaMask (server-wallet TEE or BYOK), and every transaction goes through MetaMask's policy, simulation, Blockaid scan and 2FA. What agents still cannot do safely is trade. Perps are where traders live, and on Monad that is Perpl.
+Plain text on purpose: the hackathon page renders neither markdown nor line breaks, so each paragraph opens with a
+label in capitals.
 
-mm-plugin-perpl adds a `mm perpl` command family to the MetaMask Agent Wallet CLI. Any agent that drives `mm` (Hermes, Claude Code, Codex, Cursor) can now open, monitor and close perpetual positions on Perpl, Monad's on-chain perps DEX, from a conversation.
+WHAT IT IS — mm-plugin-perpl lets an AI agent trade on Perpl, the perpetual futures exchange on Monad, with a MetaMask wallet, under safety limits the agent cannot get around.
 
-**How it works**
+THE PROBLEM — AI agents can now have their own crypto wallet. MetaMask's Agent Wallet keeps the keys out of the agent's reach and checks every transaction before it leaves. But trading on an exchange doesn't go through the wallet: orders are sent with a separate exchange key. The wallet's protection stops at the exchange's door, so nothing stops an agent that misreads a size or keeps re-sending an order.
 
-- `mm perpl setup` creates the Perpl exchange account and enables one-click trading: approve AUSD, `createAccount`, `allowOrderForwarding`. All three are wallet transactions sent through the plugin SDK's `walletExecutor`, so MetaMask's policy, simulation, Blockaid and 2FA apply. `mm perpl deposit` tops up collateral the same way.
-- `mm perpl enroll` generates an Ed25519 API key locally. The MetaMask wallet signs Perpl's EIP-712 authorisation, again through the executor. The key is trade-only (Perpl API keys can never withdraw), time-limited, revocable, and stored 0600.
-- `mm perpl order` / `close` place and close orders over Perpl's trading WebSocket. The exchange forwards them on-chain and pays the gas, which is what makes agent trading practical.
+WHAT WE BUILT —
+1. A plugin for the MetaMask Agent Wallet. The wallet itself opens the trading account and approves a special key that can place trades but can never withdraw money.
+2. A guard on every order: a maximum per trade and per day, a leverage limit, a list of allowed markets, and a "yes" from the human before anything is sent. An order that breaks a rule is refused before it reaches the exchange.
+3. A live dashboard for the human: what the agent holds, its profit or loss, and how close each position is to being liquidated, with alerts.
+4. Trade ideas from Nansen: what experienced "smart money" traders are buying or selling, turned into a suggestion that already respects the limits. The agent never trades on its own.
 
-**The problem we solve: the guard MetaMask cannot see**
+HOW IT FEELS — You ask your agent (Hermes, Claude Code, Codex or Cursor): "open a 20 dollar long on Bitcoin". The agent checks the limits, shows you the exact order and waits for your yes. You follow everything on the dashboard.
 
-Because Perpl orders go through an API key and not through the wallet, MetaMask's Guard Mode never sees them. The plugin closes that gap with its own guard, shaped like Guard Mode: per-order notional cap, max leverage, a rolling 24 h notional cap (mirrors MetaMask's outflow limit), max open positions, allowed markets (mirrors allowlists), and human confirmation by default. `GUARD_BLOCKED` is returned before anything reaches Perpl. Raising a limit is a deliberate command, never a retry, and the bundled agent skill tells the agent exactly that.
+PROOF — Live on Monad testnet. Account creation, deposits, orders, closing and risk checks all ran through a real MetaMask agent wallet. Open source, with 29 automated tests.
 
-**Beyond placing orders**
+LINKS — Dashboard: https://perpl-agent-monitor.vercel.app — Code: https://github.com/akugone/mm-plugin-perpl
 
-- `mm perpl positions` and `mm perpl risk`: PnL, margin ratio and estimated liquidation price and distance. `risk --json` returns `ok:false` plus `alerts[]` when a threshold is crossed, so a cron job or an agent can relay it to Telegram.
-- `mm perpl signals`: Nansen smart-money spot netflow (Monad, Ethereum, Base, Arbitrum, Solana) plus smart-money perp positioning, weighted by conviction, turned into a bias, a score, human-checkable evidence and a suggested order already sized by the guard. It never places an order itself.
-- `mm perpl status` always answers with the exact next step, so an agent can onboard a user end to end.
-- **Perpl Agent Monitor** (https://perpl-agent-monitor.vercel.app/): the human's view while the agent trades. Live equity, positions, PnL, estimated liquidation and alerts, plus the account's activity feed, read straight from the Perpl contract with no API key and no backend.
-
-**Built for agents**
-
-All inputs are named flags. Every command supports `--json`, and errors come back as `{code, message, hint}` where the hint names the next command to run. `--dry-run` shows the exact order frame without sending anything. A skill (`skills/perpl-trading/SKILL.md`) teaches any agent the safe flow: confirm the exact order with the user before `--yes`, and never raise a cap on its own.
-
-**Stack**
-
-TypeScript, oclif, the MetaMask Agent Wallet plugin SDK (mm 6.2 and 7.x), viem, Ed25519 via `node:crypto` (no extra crypto dependency), Perpl REST and trading WebSocket, Nansen API. 29 unit tests (request signing, Ed25519, order frames, guard and ledger, signals, risk), CI on GitHub Actions. Exchange ABI checked against the implementation deployed on Monad Testnet.
-
-**Verified live on Monad Testnet (2026-10-07)** with a MetaMask server wallet and mm 7.0.0: setup (3 wallet transactions), enroll (wallet-signed EIP-712), a filled BTC market order, positions and risk, a filled close, and Nansen signals against the live API. Evidence and every fix found on the way: STATUS.md.
+UNDER THE HOOD (for technical readers) — A TypeScript plugin for MetaMask's mm command line. Every transaction and signature goes through MetaMask's plugin wallet executor (policy, simulation, Blockaid, 2FA). Orders use Perpl's trading API with a trade-only key; the dashboard reads the Perpl contract directly; ideas come from Nansen's smart-money API.
 
 ## Go-to-market and user acquisition
 
