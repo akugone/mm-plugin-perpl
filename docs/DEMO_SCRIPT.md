@@ -34,7 +34,7 @@ clear
 - Rehearse once without recording: `signals` costs 10 Nansen credits per run (free tier: 10 a day, 75 left on
   2026-10-07), so rehearse with `--skip-perps` (5 credits) or skip it in the rehearsal.
 
-### Script (≈ 280 words — read at a calm pace, it fits in 2:00)
+### Script (≈ 230 words of narration: about 1:40 spoken, the rest is command output)
 
 **0:00–0:12 — Hook** *(both windows visible, nothing running)*
 > "This is mm-plugin-perpl. It gives a MetaMask Agent Wallet a new skill: trading perps on Perpl, Monad's on-chain
