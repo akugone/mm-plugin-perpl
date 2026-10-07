@@ -184,7 +184,7 @@ dashboard updating, the human's view, close.
 ## 3. Pitch — 2:00 (field "Pitch video": team, problem, why)
 
 Face camera for the first and last 15 seconds; voice-over on visuals in between. No terminal walkthrough here: the
-demo videos do that. ≈ 250 words, read calmly.
+demo videos do that. ≈ 250 words: about 1:55 read calmly.
 
 ### Visuals to prepare
 
@@ -202,13 +202,13 @@ demo videos do that. ≈ 250 words, read calmly.
 **0:00–0:15 — Who** *(on camera)*
 > "Hi, I'm Martin. I work with builders at iExec, and I build tooling for AI agents that handle money: the MetaMask
 > wallet plugin for Hermes Agent, now in Nous Research's official catalog, and Leash, permissions for trading
-> agents, at ETHGlobal Tokyo. This is my Metropolis build, and I'm building it solo."
+> agents, at ETHGlobal Tokyo. This is my solo Metropolis build."
 
 **0:15–0:45 — Problem** *(visual 2: the diagram, without the guard box)*
 > "AI agents are getting wallets, and MetaMask's Agent Wallet is the one people trust: the key stays in MetaMask,
-> and every transaction is simulated, scanned and checked against a policy. But the moment an agent trades perps,
-> that safety net disappears. Orders go through an exchange API key, not through the wallet. One bad loop, one
-> misread size, and the account is gone, and the wallet never saw it coming."
+> and every transaction is checked against a policy. But the moment an agent trades perps, that safety net
+> disappears: orders go through an exchange API key, not the wallet. One bad loop, one misread size, and the
+> account is gone."
 
 **0:45–1:15 — Solution** *(visual 2 with the guard box, then visual 3, then visual 4)*
 > "mm-plugin-perpl adds perpetuals on Perpl, Monad's on-chain exchange, to the MetaMask Agent Wallet, and closes
@@ -218,8 +218,8 @@ demo videos do that. ≈ 250 words, read calmly.
 
 **1:15–1:40 — Why now, why Monad** *(visual 5)*
 > "MetaMask opened plugins a few weeks ago, and almost nothing trades through them yet. Monad makes perps fast and
-> cheap enough for an agent to trade like a person would, and Perpl forwards orders without gas. Every agent that
-> uses this is a new Perpl account and real order flow."
+> cheap enough for agents, and Perpl forwards their orders without gas. Every agent that uses this is a new Perpl
+> account and real order flow."
 
 **1:40–2:00 — Where it stands, what's next** *(on camera)*
 > "It's open source and live on Monad testnet today: account, key, orders, risk and Nansen signals, all through the
