@@ -26,7 +26,7 @@ in `skills/perpl-trading/SKILL.md`.
 > [createAccount](https://testnet.monadscan.com/tx/0x00c678157d9bbb9d274a28befe0397502dd5c3bc1987b8d652ab37d0a4a0b574),
 > [allowOrderForwarding](https://testnet.monadscan.com/tx/0x1395a721402fcd38d38d4719ca65f8e1d3c9692336d3a3c6b5db2d4d862c7b29)),
 > `enroll` (wallet-signed EIP-712), `status`, a filled market `order`, `positions`, `risk`, and a filled `close`.
-> Not yet run live: `signals` (needs a Nansen key), `deposit`. Details: **[STATUS.md](STATUS.md)**.
+> `signals` verified live against the Nansen API. Not yet run live: `deposit`. Details: **[STATUS.md](STATUS.md)**.
 
 ## Why this shape
 
@@ -149,12 +149,14 @@ $ mm perpl order --market BTC --side long --notional-usd 500 --leverage 10 --yes
 
 ## Nansen signals
 
-`mm perpl signals` combines two Smart Money feeds per Perpl market: **spot netflow on Monad** (are labelled smart
-wallets accumulating or distributing the asset?) and **smart-money perp trades** (how are they positioned on the
-same asset?). Output per market: `bias`, `score` (−1…+1), `confidence`, human-checkable `evidence`, and a
+`mm perpl signals` combines two Smart Money feeds per Perpl market: **spot netflow** on Monad, Ethereum, Base,
+Arbitrum and Solana in one call (are labelled smart wallets accumulating or distributing the asset? Nansen returns
+no smart-money netflow for Monad itself today) and **smart-money perp trades**, opens and adds only (how are they
+positioning on the same asset?). Output per market: `bias`, `score` (−1…+1), `confidence`, human-checkable `evidence`, and a
 `suggestion` already capped by your guard. It never places an order.
 
-Nansen bills per call; the free tier is small. Set `NANSEN_API_KEY`; `--skip-perps` halves the cost. The command
+Nansen bills per call: 5 credits per feed, so 10 per run. The free tier grants 10 credits a day. Set
+`NANSEN_API_KEY`; `--skip-perps` halves the cost. The command
 reports `creditsSpent` from Nansen's response headers.
 
 ## Risk monitoring from cron

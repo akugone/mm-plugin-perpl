@@ -2,7 +2,7 @@
  * Nansen smart-money data → trade signals sized by the guard.
  *
  * Two sources, combined per Perpl market:
- *  - Smart Money netflow on Monad (spot): are labelled smart wallets accumulating or distributing the asset?
+ *  - Smart Money spot netflow (Monad, Ethereum, Base, Arbitrum, Solana): are labelled smart wallets accumulating or distributing the asset?
  *  - Smart Money perp trades (Hyperliquid, trailing 7 days): how are they positioned on the same asset?
  * The output is a decision aid, not raw data: a bias, a score, the evidence lines a human can check, and a
  * suggested order already capped by the plugin's guard. Nothing here places an order.
@@ -28,8 +28,12 @@ export type PerpTradeRow = {
   trader_address?: string;
   trader_address_label?: string;
   token_symbol?: string;
-  position_side?: string; // Long | Short
-  action?: string; // Open | Close | ...
+  /** "Long" | "Short" — the live API field. */
+  side?: string;
+  /** Older docs name; kept as a fallback. */
+  position_side?: string;
+  action?: string; // Open | Add | Reduce | Close
+
   value_usd?: number | string;
   block_timestamp?: string;
 };
@@ -77,7 +81,13 @@ async function post<T>(apiKey: string, path: string, body: unknown, fetchImpl: F
   return { data, credits: res.headers.get("x-nansen-credits-cost") ?? undefined };
 }
 
-export async function fetchNetflow(apiKey: string, chains: string[] = ["monad"], perPage = 100, fetchImpl: FetchLike = fetch): Promise<{ rows: NetflowRow[]; credits?: string }> {
+/**
+ * Chains scanned for spot netflow. Nansen's smart-money netflow returns nothing for Monad today (checked 2026-10-07),
+ * so the same assets are read where they trade (WBTC/WETH on Ethereum, Base, Arbitrum; SOL on Solana). One call.
+ */
+export const NETFLOW_CHAINS = ["monad", "ethereum", "base", "arbitrum", "solana"];
+
+export async function fetchNetflow(apiKey: string, chains: string[] = NETFLOW_CHAINS, perPage = 100, fetchImpl: FetchLike = fetch): Promise<{ rows: NetflowRow[]; credits?: string }> {
   const { data, credits } = await post<NetflowRow[] | { items?: NetflowRow[] }>(apiKey, "/api/v1/smart-money/netflow", {
     chains,
     filters: { include_smart_money_labels: ["Fund", "Smart Trader", "30D Smart Trader", "90D Smart Trader", "180D Smart Trader"] },
@@ -97,10 +107,23 @@ export async function fetchPerpTrades(apiKey: string, lookbackHours = 72, perPag
   return { rows: Array.isArray(data) ? data : (data?.items ?? []), credits };
 }
 
+function sideOf(t: PerpTradeRow): string {
+  return String(t.side ?? t.position_side ?? "");
+}
+
+/** Positioning = new or increased exposure; reductions and closes say nothing about direction conviction. */
+function opensExposure(t: PerpTradeRow): boolean {
+  return t.action === undefined || /^(open|add)/i.test(t.action);
+}
+
 function num(v: number | string | undefined): number {
   const n = typeof v === "string" ? Number(v) : (v ?? 0);
   return Number.isFinite(n) ? n : 0;
 }
+
+/** Perp positioning reaches full weight at this much opened notional and this many trades in the window. */
+export const PERP_FULL_WEIGHT_USD = 100_000;
+export const PERP_FULL_WEIGHT_TRADES = 3;
 
 /** Pure: turn raw rows into one signal per market, sized by the guard. */
 export function computeSignals(markets: string[], netflow: NetflowRow[], perpTrades: PerpTradeRow[], guard: GuardConfig): Signal[] {
@@ -113,10 +136,13 @@ export function computeSignals(markets: string[], netflow: NetflowRow[], perpTra
     const traders = flows.reduce((s, r) => s + (r.trader_count ?? 0), 0);
     const flowScore = flows.length ? Math.max(-1, Math.min(1, flow24 / maxAbsFlow)) : 0;
 
-    const trades = perpTrades.filter((t) => aliases.includes(String(t.token_symbol ?? "").toUpperCase()));
-    const longUsd = trades.filter((t) => /long/i.test(String(t.position_side))).reduce((s, t) => s + num(t.value_usd), 0);
-    const shortUsd = trades.filter((t) => /short/i.test(String(t.position_side))).reduce((s, t) => s + num(t.value_usd), 0);
-    const perpScore = longUsd + shortUsd > 0 ? (longUsd - shortUsd) / (longUsd + shortUsd) : 0;
+    const trades = perpTrades.filter((t) => aliases.includes(String(t.token_symbol ?? "").toUpperCase()) && opensExposure(t));
+    const longUsd = trades.filter((t) => /long/i.test(sideOf(t))).reduce((s, t) => s + num(t.value_usd), 0);
+    const shortUsd = trades.filter((t) => /short/i.test(sideOf(t))).reduce((s, t) => s + num(t.value_usd), 0);
+    // Direction (long vs short share) times conviction: a lone $98 open must not weigh like $500k across many traders.
+    const perpUsd = longUsd + shortUsd;
+    const perpWeight = Math.min(1, perpUsd / PERP_FULL_WEIGHT_USD) * Math.min(1, trades.length / PERP_FULL_WEIGHT_TRADES);
+    const perpScore = perpUsd > 0 ? ((longUsd - shortUsd) / perpUsd) * perpWeight : 0;
 
     const sources = (flows.length ? 1 : 0) + (trades.length ? 1 : 0);
     const score = sources === 0 ? 0 : (flowScore * (flows.length ? 1 : 0) + perpScore * (trades.length ? 1 : 0)) / sources;
@@ -124,9 +150,9 @@ export function computeSignals(markets: string[], netflow: NetflowRow[], perpTra
     const confidence: Signal["confidence"] = sources === 2 && Math.abs(score) > 0.5 ? "high" : sources >= 1 && Math.abs(score) > 0.2 ? "medium" : "low";
 
     const evidence: string[] = [];
-    if (flows.length) evidence.push(`Smart money netflow on Monad: ${usd(flow24)} over 24h, ${usd(flow7d)} over 7d, ${traders} smart traders (${flows.map((f) => f.token_symbol).join("/")})`);
-    else evidence.push("No smart-money netflow row for this asset on Monad in the top results");
-    if (trades.length) evidence.push(`Smart money perp opens (Hyperliquid, trailing window): ${usd(longUsd)} long vs ${usd(shortUsd)} short across ${trades.length} trades`);
+    if (flows.length) evidence.push(`Smart money spot netflow: ${usd(flow24)} over 24h, ${usd(flow7d)} over 7d, ${traders} smart traders (${flows.map((f) => (f.chain ? `${f.token_symbol}@${f.chain}` : f.token_symbol)).join(", ")})`);
+    else evidence.push("No smart-money spot netflow row for this asset in the top results");
+    if (trades.length) evidence.push(`Smart money perp opens (Hyperliquid, trailing window): ${usd(longUsd)} long vs ${usd(shortUsd)} short across ${trades.length} trades${perpWeight < 1 ? ` (thin sample, weighted ${Math.round(perpWeight * 100)}%)` : ""}`);
     else evidence.push("No smart-money perp trades for this asset in the window");
 
     const signal: Signal = { market: market.toUpperCase(), bias, score: Math.round(score * 100) / 100, confidence, evidence };

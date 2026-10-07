@@ -11,14 +11,26 @@ describe("nansen signals", () => {
     { token_symbol: "MON", chain: "monad", net_flow_24h_usd: 10000, net_flow_7d_usd: 0, trader_count: 1 },
   ];
   const perps = [
-    { token_symbol: "BTC", position_side: "Long", value_usd: 300000 },
-    { token_symbol: "BTC", position_side: "Long", value_usd: 100000 },
+    { token_symbol: "BTC", side: "Long", action: "Open", value_usd: 300000 },
+    { token_symbol: "BTC", side: "Short", action: "Reduce", value_usd: 900000 },
+    { token_symbol: "BTC", side: "Long", action: "Add", value_usd: 100000 },
     { token_symbol: "ETH", position_side: "Short", value_usd: 250000 },
     { token_symbol: "ETH", position_side: "Long", value_usd: 50000 },
   ];
   it("maps Perpl symbols to the wrapped tokens Nansen reports", () => {
     expect(aliasesFor("btc")).toContain("WBTC");
     expect(aliasesFor("XYZ")).toEqual(["XYZ"]);
+  });
+  it("down-weights a thin perp sample so a single small open is not a signal", () => {
+    const [lit, big] = computeSignals(["LIT", "BTC"], [], [
+      { token_symbol: "LIT", side: "Long", action: "Open", value_usd: 98 },
+      ...[1, 2, 3].map(() => ({ token_symbol: "BTC", side: "Long", action: "Open", value_usd: 200000 })),
+    ], DEFAULT_GUARD);
+    expect(lit.bias).toBe("neutral");
+    expect(lit.suggestion).toBeUndefined();
+    expect(lit.evidence[1]).toMatch(/thin sample/);
+    expect(big.bias).toBe("long");
+    expect(big.score).toBe(1);
   });
   it("combines spot netflow and perp positioning into a sized suggestion", () => {
     const [btc, eth, sol] = computeSignals(["BTC", "ETH", "SOL"], netflow, perps, DEFAULT_GUARD);

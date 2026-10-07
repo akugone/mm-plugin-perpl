@@ -10,7 +10,7 @@ const inputs = {
   chainId: { type: InputFieldType.Text, flag: "chain-id", message: "Chain id whose Perpl markets to score: 143 (Monad) or 10143 (Monad Testnet)", required: false, prompt: false },
   markets: { type: InputFieldType.Text, flag: "markets", message: "Comma-separated market symbols to score (default: all open Perpl markets)", required: false, prompt: false },
   lookbackHours: { type: InputFieldType.Text, flag: "lookback-hours", message: "Smart-money perp trades window, 1-168 hours (default 72)", required: false, prompt: false },
-  skipPerps: { type: InputFieldType.Boolean, flag: "skip-perps", message: "Only use spot netflow on Monad (saves Nansen credits)", required: false, prompt: false, default: false },
+  skipPerps: { type: InputFieldType.Boolean, flag: "skip-perps", message: "Only use smart-money spot netflow (saves Nansen credits)", required: false, prompt: false, default: false },
 } satisfies InputSchema;
 
 export type SignalsResult = {
@@ -26,7 +26,7 @@ export type SignalsResult = {
 
 export default class PerplSignals extends PluginCommand<SignalsResult> {
   static override description =
-    "Trade ideas for Perpl markets from Nansen smart-money data: spot netflow on Monad plus smart-money perp positioning on the same assets, combined into a bias, a score, checkable evidence and a suggested order already capped by the plugin's guard. Needs NANSEN_API_KEY. Never places an order.";
+    "Trade ideas for Perpl markets from Nansen smart-money data: smart-money spot netflow (Monad, Ethereum, Base, Arbitrum, Solana) plus smart-money perp positioning on the same assets, combined into a bias, a score, checkable evidence and a suggested order already capped by the plugin's guard. Needs NANSEN_API_KEY. Never places an order.";
   static override examples = ["<%= config.bin %> perpl signals", "<%= config.bin %> perpl signals --markets BTC,ETH --lookback-hours 24 --json", "<%= config.bin %> perpl signals --skip-perps"];
   static override requiresAuth = false;
   static override requiresInit = false;
@@ -50,7 +50,7 @@ export default class PerplSignals extends PluginCommand<SignalsResult> {
     if (!markets.length) throw new CommandError("PERPL_UNKNOWN_MARKET", "None of the requested markets exist on Perpl.", `Available: ${perpl.markets.map((m) => m.symbol).join(", ")}.`);
 
     const credits: string[] = [];
-    io.progress("Nansen: smart-money netflow on Monad");
+    io.progress("Nansen: smart-money spot netflow");
     const nf = await fetchNetflow(apiKey, ["monad"]);
     if (nf.credits) credits.push(`netflow: ${nf.credits}`);
     let perpRows: Awaited<ReturnType<typeof fetchPerpTrades>>["rows"] = [];

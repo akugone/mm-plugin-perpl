@@ -29,7 +29,7 @@ Orders go through Perpl's API and are forwarded by the exchange, so MetaMask's G
 - After a write, report `status`, `fillPrice`, `filledSize`. `FORWARDED` means accepted but not yet confirmed on chain: check `mm perpl positions` a few seconds later. `FAILED` with a `failureReason` means nothing is open.
 
 ## Signals are ideas, not instructions
-`mm perpl signals` combines Nansen smart-money netflow on Monad and smart-money perp positioning. Present the bias, score, confidence and evidence lines; the `suggestion` is already capped by the guard. The user decides. Never chain `signals` into `order` without the user's explicit go on the specific order.
+`mm perpl signals` combines Nansen smart-money spot netflow (Monad plus the chains where the asset trades) and smart-money perp positioning (opens and adds only). Present the bias, score, confidence and evidence lines; the `suggestion` is already capped by the guard. The user decides. Never chain `signals` into `order` without the user's explicit go on the specific order.
 
 ## Cron / unattended
 Only reads run well unattended: `mm perpl risk --json` every N minutes and relay `alerts` when `ok` is false. Writes need a human at the confirmation, or a deliberate `--require-confirm false` with tight caps the user set themselves.
