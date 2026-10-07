@@ -1,7 +1,9 @@
-node_modules/
-dist/
-oclif.manifest.json
-.DS_Store
 *.tgz
+.DS_Store
 .env
 .vercel
+dist/
+node_modules/
+oclif.manifest.json
+video/node_modules
+video/out

@@ -220,7 +220,7 @@ const DEFAULT_ADDRESS = "0x62Fe7760f9462D766af38EccfA4B5889d9FA32Ab"; // the dem
 const LOG_RANGE = 100;          // Monad public RPC caps eth_getLogs at 100 blocks
 const DEFAULT_SCAN = 3000;      // ~20 min of history at 0.4 s blocks
 const MAX_SCAN = 40000;
-const REFRESH_MS = 5000;
+const REFRESH_MS = Math.max(2000, Number(new URLSearchParams(location.search).get("refresh")) || 5000); // ?refresh=2000 for demos
 
 const exchangeAbi = parseAbi([
   "function getExchangeInfo() view returns (uint256 balanceCNS, uint256 protocolBalanceCNS, uint256 recycleBalanceCNS, uint256 collateralDecimals, address collateralToken, address verifierProxy)",
