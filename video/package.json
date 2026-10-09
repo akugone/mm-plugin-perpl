@@ -1,9 +1,0 @@
-{
-  "name": "mm-plugin-perpl-video",
-  "private": true,
-  "type": "module",
-  "description": "Recording and assembly of the demo video (terminal via VHS, dashboard via Playwright, assembly via ffmpeg).",
-  "devDependencies": {
-    "playwright": "^1.48.0"
-  }
-}

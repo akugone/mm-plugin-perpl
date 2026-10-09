@@ -5,6 +5,7 @@
 dist/
 node_modules/
 oclif.manifest.json
-video/.venv
-video/node_modules
-video/out
+
+# Presentation material (local only)
+video/
+docs/
