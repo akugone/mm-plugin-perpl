@@ -26,7 +26,7 @@ in `skills/perpl-trading/SKILL.md`.
 > [createAccount](https://testnet.monadscan.com/tx/0x00c678157d9bbb9d274a28befe0397502dd5c3bc1987b8d652ab37d0a4a0b574),
 > [allowOrderForwarding](https://testnet.monadscan.com/tx/0x1395a721402fcd38d38d4719ca65f8e1d3c9692336d3a3c6b5db2d4d862c7b29)),
 > `enroll` (wallet-signed EIP-712), `status`, a filled market `order`, `positions`, `risk`, and a filled `close`.
-> `deposit` and `signals` (against the live Nansen API) verified live too. Details: **[STATUS.md](STATUS.md)**.
+> `deposit` and `signals` (against the live Nansen API) verified live too.
 
 ## Why this shape
 

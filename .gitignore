@@ -9,3 +9,5 @@ oclif.manifest.json
 # Presentation material (local only)
 video/
 docs/
+STATUS.md
+assets/pitch-*
