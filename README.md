@@ -171,7 +171,7 @@ funding and margin parameters. Refreshes every 5 s.
 Everything is read from the Perpl Exchange contract through the public Monad RPC (`getAccountByAddr`, `getPosition`,
 `getPerpetualInfoV2`, `getMarginFractions`, events): no API key, no backend, nothing stored. Perpl's events don't index
 the account, and the public RPC caps `eth_getLogs` at 100 blocks, so the activity feed scans the last ~20 minutes
-then stays live; `?from=<block>` scans further back (e.g. `?from=68939700` shows this wallet's first trade). Single
+then stays live; `?from=<block>` scans further back. Single
 static file: `dashboard/index.html`, deployed on Vercel (`cd dashboard && vercel deploy --prod`).
 
 ## Risk monitoring from cron
@@ -194,19 +194,21 @@ Estimates are first-order (mark price, published maintenance margin, no funding/
 - **Guardrails before every order**, with the caps and confirmation described above.
 - **Hostile-input hygiene.** Symbols and error texts from the exchange are used as data; every numeric input is
   validated against the market's decimals; nothing from the network is interpolated into shell commands.
-- **Minimal capabilities.** Only `setup` and `enroll` request `wallet-submit`; trading commands only need
+- **Minimal capabilities.** Only `setup`, `deposit` and `enroll` request `wallet-submit`; trading commands only need
   `wallet-read` (to know which wallet's key to use); `markets`, `guard`, `signals` need nothing.
 
 ## Development
 
 ```bash
 npm install
-npm test            # vitest: request signing, ed25519, scaling, order frames, guard + ledger, signals, risk
+npm test            # vitest: request signing, ed25519, scaling, order frames, guard + ledger, signals, risk,
+                    # transaction preflight
 npm run build       # tsc + oclif manifest
 ```
 
 Layout: `src/lib/perpl/` (auth, ed25519, rest, ws session, orders, scale, store, types) · `src/lib/guard.ts` ·
-`src/lib/nansen.ts` · `src/lib/positions.ts` · `src/commands/perpl/*` · `skills/perpl-trading/SKILL.md`.
+`src/lib/nansen.ts` · `src/lib/positions.ts` · `src/lib/executor.ts` · `src/commands/perpl/*` ·
+`skills/perpl-trading/SKILL.md` · `dashboard/index.html`.
 
 Built for the Monad **Metropolis** hackathon (Sep–Oct 2026). Sibling projects by the same author:
 [hermes-metamask-wallet](https://github.com/akugone/hermes-metamask-wallet) (Hermes Agent plugin for the mm CLI)
