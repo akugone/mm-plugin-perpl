@@ -75,6 +75,18 @@ button.ghost{background:transparent;color:var(--muted);border-color:var(--line);
 button.ghost:hover{color:var(--fg);background:var(--hover)}
 .skin-btn{display:inline-flex;align-items:center;gap:6px;padding:0 10px}
 .skin-btn svg{width:16px;height:16px}
+.skin-btn .chev{width:14px;height:14px;transition:transform .2s}
+.skin-btn[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.skin-pick{position:relative;display:inline-flex}
+.skin-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:20;min-width:230px;padding:6px;background:var(--panel);border:var(--bw) solid var(--line);border-radius:var(--r-card);box-shadow:0 14px 36px rgba(15,15,15,.16)}
+.skin-menu[hidden]{display:none}
+.skin-menu .skin-item{display:flex;align-items:center;gap:10px;width:100%;height:auto;padding:8px 10px;border:0;border-radius:calc(var(--r-card) - 4px);background:transparent;color:var(--fg);text-align:left;font:500 13px/1.3 var(--sans);cursor:pointer}
+.skin-menu .skin-item:hover,.skin-menu .skin-item:focus-visible{background:var(--hover);outline:none}
+.skin-item small{display:block;margin-top:1px;font-size:11.5px;color:var(--muted)}
+.skin-item .tick{margin-left:auto;visibility:hidden;color:var(--fg)}
+.skin-item[aria-checked="true"] .tick{visibility:visible}
+.swatch{display:inline-flex;flex:none;padding-left:3px}
+.swatch i{width:14px;height:14px;margin-left:-4px;border-radius:50%;border:1.5px solid rgba(0,0,0,.28)}
 :root:not([data-skin="clean"]) #theme{display:none} /* light and dark only apply to the clean skin */
 .skin-switching,.skin-switching *{transition:background-color .35s,color .35s,border-color .35s,box-shadow .35s}
 @media (prefers-reduced-motion:reduce){.skin-switching,.skin-switching *{transition:none}}
@@ -249,8 +261,8 @@ footer a{color:var(--fg-2)}
 [data-skin="brutal"] .stat:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #111}
 [data-skin="brutal"] .stat .v{font-weight:700}
 [data-skin="brutal"] .welcome{background:#c9b8ff;border-left-width:2.5px}
-[data-skin="brutal"] button:not(.ghost),[data-skin="brutal"] a.welcome-btn{box-shadow:3px 3px 0 #111;border:2px solid #111}
-[data-skin="brutal"] button:not(.ghost):active,[data-skin="brutal"] a.welcome-btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #111}
+[data-skin="brutal"] button:not(.ghost):not(.skin-item),[data-skin="brutal"] a.welcome-btn{box-shadow:3px 3px 0 #111;border:2px solid #111}
+[data-skin="brutal"] button:not(.ghost):not(.skin-item):active,[data-skin="brutal"] a.welcome-btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #111}
 [data-skin="brutal"] button.ghost{color:#111;border-color:#111;background:#fff}
 [data-skin="brutal"] .pill{border-color:#111;color:#111}
 [data-skin="brutal"] .pill-ok{background:#7cf5b8}[data-skin="brutal"] .pill-ok .dot{background:#111}
@@ -282,7 +294,7 @@ footer a{color:var(--fg-2)}
 [data-skin="monad"] .sections a.active{background:#25124f;color:#ffffff}
 [data-skin="monad"] .bar.ok i b{background:linear-gradient(90deg,#836ef9,#5dcaa5)}
 [data-skin="monad"] .pill-ok{background:#10302b}
-[data-skin="monad"] button:not(.ghost):hover,[data-skin="monad"] a.welcome-btn:hover{box-shadow:0 0 0 4px rgba(131,110,249,.25)}
+[data-skin="monad"] button:not(.ghost):not(.skin-item):hover,[data-skin="monad"] a.welcome-btn:hover{box-shadow:0 0 0 4px rgba(131,110,249,.25)}
 </style>
 </head>
 <body>
@@ -298,7 +310,10 @@ footer a{color:var(--fg-2)}
         <option value="143">Monad</option>
       </select>
       <button type="submit">Watch</button>
-      <button type="button" class="ghost skin-btn" id="skin" title="Change the look"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.8 1.7-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H16a5 5 0 0 0 5-5c0-3.9-4-7.2-9-7.2z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="7.5" cy="11" r="1.3" fill="currentColor"/><circle cx="10.5" cy="7.5" r="1.3" fill="currentColor"/><circle cx="15" cy="7.5" r="1.3" fill="currentColor"/></svg><span id="skinName">Clean</span></button>
+      <span class="skin-pick">
+      <button type="button" class="ghost skin-btn" id="skin" title="Change the look" aria-haspopup="menu" aria-expanded="false" aria-controls="skinMenu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.8 1.7-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H16a5 5 0 0 0 5-5c0-3.9-4-7.2-9-7.2z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="7.5" cy="11" r="1.3" fill="currentColor"/><circle cx="10.5" cy="7.5" r="1.3" fill="currentColor"/><circle cx="15" cy="7.5" r="1.3" fill="currentColor"/></svg><span id="skinName">Kawaii</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="skin-menu" id="skinMenu" role="menu" aria-label="Look" hidden></div>
+      </span>
       <button type="button" class="ghost" id="theme" aria-label="Toggle dark mode" title="Toggle dark mode">◐</button>
     </form>
   </div>
@@ -471,19 +486,56 @@ function highlightSection() {
 addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(highlightSection); } }, { passive: true });
 highlightSection();
 
-// skins: each one is a block of CSS variables keyed on <html data-skin>; the button cycles through them
-const SKIN_NAMES = { clean: "Clean", kawaii: "Kawaii", brutal: "Brutal", monad: "Monad night" };
+// skins: each one is a block of CSS variables keyed on <html data-skin>; the palette button opens a menu of them
+const SKIN_META = {
+  kawaii: { name: "Kawaii", hint: "Pastel, with a mascot", swatch: ["#fff0f6", "#8b7cf6", "#c9f0e0"] },
+  clean: { name: "Clean", hint: "Black and white, light or dark", swatch: ["#ffffff", "#191919", "#0f7b6c"] },
+  brutal: { name: "Brutal", hint: "Flat pop colours, thick borders", swatch: ["#fff3b0", "#111111", "#ff6fb5"] },
+  monad: { name: "Monad night", hint: "Deep purple", swatch: ["#0e091c", "#836ef9", "#ffa1a1"] },
+};
 const skins = document.documentElement.dataset.skins.split(" ");
-function showSkin() { $("skinName").textContent = SKIN_NAMES[document.documentElement.dataset.skin] ?? document.documentElement.dataset.skin; }
-showSkin();
-$("skin").onclick = () => {
+const skinBtn = $("skin"), skinMenu = $("skinMenu");
+// names and hints are constants above, and ids come from <html data-skins>, so no escaping is needed here
+skinMenu.innerHTML = skins.map((id) => {
+  const m = SKIN_META[id] ?? { name: id, hint: "", swatch: [] };
+  return `<button type="button" class="skin-item" role="menuitemradio" aria-checked="false" data-skin="${id}">
+    <span class="swatch" aria-hidden="true">${m.swatch.map((c) => `<i style="background:${c}"></i>`).join("")}</span>
+    <span>${m.name}<small>${m.hint}</small></span><span class="tick" aria-hidden="true">✓</span></button>`;
+}).join("");
+const skinItems = [...skinMenu.querySelectorAll(".skin-item")];
+function showSkin() {
+  const cur = document.documentElement.dataset.skin;
+  $("skinName").textContent = SKIN_META[cur]?.name ?? cur;
+  skinItems.forEach((b) => b.setAttribute("aria-checked", String(b.dataset.skin === cur)));
+}
+function applySkin(id) {
   const r = document.documentElement;
+  if (r.dataset.skin === id) return;
   r.classList.add("skin-switching");
-  r.dataset.skin = skins[(skins.indexOf(r.dataset.skin) + 1) % skins.length];
-  try { localStorage.setItem("pam-skin", r.dataset.skin); } catch {}
+  r.dataset.skin = id;
+  try { localStorage.setItem("pam-skin", id); } catch {}
   showSkin();
   setTimeout(() => r.classList.remove("skin-switching"), 400);
+}
+function openSkinMenu() {
+  skinMenu.hidden = false; skinBtn.setAttribute("aria-expanded", "true");
+  (skinItems.find((b) => b.getAttribute("aria-checked") === "true") ?? skinItems[0]).focus();
+}
+function closeSkinMenu(refocus) {
+  if (skinMenu.hidden) return;
+  skinMenu.hidden = true; skinBtn.setAttribute("aria-expanded", "false");
+  if (refocus) skinBtn.focus();
+}
+showSkin();
+skinBtn.onclick = () => (skinMenu.hidden ? openSkinMenu() : closeSkinMenu(false));
+skinMenu.onclick = (e) => { const b = e.target.closest(".skin-item"); if (b) { applySkin(b.dataset.skin); closeSkinMenu(true); } };
+skinMenu.onkeydown = (e) => {
+  const i = skinItems.indexOf(document.activeElement);
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); skinItems[(i + (e.key === "ArrowDown" ? 1 : skinItems.length - 1)) % skinItems.length].focus(); }
+  else if (e.key === "Home" || e.key === "End") { e.preventDefault(); skinItems[e.key === "Home" ? 0 : skinItems.length - 1].focus(); }
+  else if (e.key === "Escape" || e.key === "Tab") closeSkinMenu(e.key === "Escape");
 };
+document.addEventListener("click", (e) => { if (!e.target.closest(".skin-pick")) closeSkinMenu(false); });
 
 // theme toggle (per-viewer convenience only)
 const root = document.documentElement;
