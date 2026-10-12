@@ -76,6 +76,19 @@ html{scroll-behavior:smooth}
 
 .app{max-width:1160px;margin:0 auto;padding:28px 24px 56px}
 
+/* welcome: shown on the demo agent's account, hidden once dismissed */
+.welcome{display:flex;gap:16px;align-items:flex-start;margin-bottom:24px;padding:16px 18px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--fg);border-radius:10px;box-shadow:var(--shadow)}
+.welcome[hidden]{display:none}
+.welcome-body{flex:1;min-width:0}
+.welcome-title{font-weight:600;font-size:14px}
+.welcome p{margin:6px 0 12px;color:var(--fg-2);font-size:13.5px;max-width:92ch}
+.welcome-links{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px}
+.welcome-links a{color:var(--fg-2)}
+.welcome-links a:hover{color:var(--fg)}
+a.welcome-btn{display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:8px;background:var(--btn);color:var(--btn-fg);text-decoration:none;font-weight:500}
+a.welcome-btn:hover{color:var(--btn-fg);opacity:.9}
+.welcome-close{flex:none;font-size:18px;line-height:1}
+
 /* hero */
 .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
 .eyebrow{font-size:12px;color:var(--muted);margin-bottom:6px}
@@ -181,6 +194,19 @@ footer a{color:var(--fg-2)}
 </header>
 
 <main class="app">
+  <aside class="welcome" id="welcome" hidden aria-label="About this page">
+    <div class="welcome-body">
+      <div class="welcome-title">What you are looking at</div>
+      <p>The live Perpl account of an AI agent that trades perps on Monad through <strong>mm-plugin-perpl</strong>, a plugin for the MetaMask Agent Wallet. The MetaMask wallet opened the account and signed a key that can trade but never withdraw; every order then passes the plugin's guard. This page is the human's view: positions, risk, the agent's trades and the protocol around them, read straight from the Perpl contract.</p>
+      <div class="welcome-links">
+        <a class="welcome-btn" href="https://youtu.be/9qHfKf853f0" target="_blank" rel="noopener">Watch the demo</a>
+        <a href="#sec-stress">Try the stress test</a>
+        <a href="https://github.com/akugone/mm-plugin-perpl" target="_blank" rel="noopener">Code on GitHub</a>
+      </div>
+    </div>
+    <button type="button" class="ghost welcome-close" id="welcomeClose" aria-label="Hide this introduction" title="Hide">×</button>
+  </aside>
+
   <div class="hero" id="overview">
     <div>
       <div class="eyebrow">Agent wallet on Perpl</div>
@@ -339,6 +365,12 @@ const chainParam = Number(params.get("chain"));
 if (NETWORKS[chainParam]) state.chainId = chainParam;
 const addrParam = params.get("address");
 if (addrParam && isAddress(addrParam)) state.address = getAddress(addrParam);
+
+// The introduction describes the demo agent, so it only shows on that account (and until the viewer hides it).
+let welcomeHidden = false;
+try { welcomeHidden = localStorage.getItem("pam-welcome") === "hidden"; } catch {}
+$("welcome").hidden = welcomeHidden || state.address !== DEFAULT_ADDRESS;
+$("welcomeClose").onclick = () => { $("welcome").hidden = true; try { localStorage.setItem("pam-welcome", "hidden"); } catch {} };
 $("addr").value = state.address; $("chain").value = String(state.chainId); $("netName").textContent = NETWORKS[state.chainId].name;
 $("f").onsubmit = (e) => {
   e.preventDefault();
