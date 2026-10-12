@@ -229,8 +229,8 @@ footer a{color:var(--fg-2)}
   <section class="panel" id="sec-positions">
     <div class="panel-head"><h2>Open positions</h2><span class="hint">Liquidation is a first-order estimate: mark price and maintenance margin, no funding or fees.</span></div>
     <div class="table-wrap"><table>
-      <thead><tr><th>Market</th><th>Side</th><th>Size</th><th>Entry</th><th>Mark</th><th>Notional</th><th>Collateral</th><th>Lev.</th><th>uPnL</th><th>Margin ratio</th><th>Maint.</th><th>Liq. (est.)</th><th>Distance</th></tr></thead>
-      <tbody id="positions"><tr><td colspan="13" class="empty">Loading…</td></tr></tbody>
+      <thead><tr><th>Market</th><th>Side</th><th>Size</th><th>Entry</th><th>Mark</th><th>Notional</th><th>Collateral</th><th>Lev.</th><th>uPnL</th><th>Funding paid</th><th>Margin ratio</th><th>Maint.</th><th>Liq. (est.)</th><th>Distance</th></tr></thead>
+      <tbody id="positions"><tr><td colspan="14" class="empty">Loading…</td></tr></tbody>
     </table></div>
   </section>
 
@@ -467,6 +467,7 @@ function view(p, pos, markPNS) {
     market: p.symbol, pd: p.pd, ld: p.ld, side, dir: side === "long" ? 1 : -1,
     size: scale(pos.lotLNS, p.ld), entry: scale(pos.pricePNS, p.pd), coll: scale(pos.depositCNS, collDec),
     mm: p.maintHdths > 0 ? 100 / p.maintHdths : 0.05, entryBlock: pos.entryBlock,
+    funding: scale(pos.premiumPnlCNS, collDec), // funding settled since opening: negative = paid, positive = received
   };
   return metrics(base, scale(markPNS, p.pd));
 }
@@ -515,7 +516,7 @@ function renderAccount(positions, block) {
 }
 
 function renderPositions(positions) {
-  if (!positions.length) { $("positions").innerHTML = `<tr><td colspan="13" class="empty">${account ? "No open position." : "No account."}</td></tr>`; return; }
+  if (!positions.length) { $("positions").innerHTML = `<tr><td colspan="14" class="empty">${account ? "No open position." : "No account."}</td></tr>`; return; }
   $("positions").innerHTML = positions.map((p) => {
     const d = p.dist * 100, level = !Number.isFinite(d) ? "" : d < T.minLiqDistancePct ? "bad" : d < T.minLiqDistancePct * 2 ? "warn" : "ok";
     const width = Number.isFinite(d) ? Math.max(4, Math.min(100, d)) : 0;
@@ -523,6 +524,7 @@ function renderPositions(positions) {
       <td><strong>${esc(p.market)}</strong></td><td><span class="side ${p.side}">${p.side}</span></td>
       <td>${fmt(p.size, p.ld)}</td><td>${fmt(p.entry, p.pd)}</td><td>${fmt(p.mark, p.pd)}</td><td>${fmt(p.notional)}</td><td>${fmt(p.coll)}</td>
       <td>${fmt(p.lev, 1)}x</td><td class="${cls(p.upnl)}">${fmtSigned(p.upnl)} <small>(${fmtSigned(p.upnlPct, 1)}%)</small></td>
+      <td class="${cls(p.funding)}">${fmtSigned(p.funding, 4)}</td>
       <td>${fmt(p.marginRatio, 3)}</td><td>${fmt(p.mm * 100, 1)}%</td><td>${Number.isFinite(p.liq) ? fmt(p.liq, p.pd) : "none"}</td>
       <td>${Number.isFinite(d) ? `<span class="bar ${level}"><i><b style="width:${width}%"></b></i>${fmt(d, 1)}%</span>` : `<small>no liquidation</small>`}</td></tr>`;
   }).join("");
