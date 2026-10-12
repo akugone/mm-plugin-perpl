@@ -107,6 +107,7 @@ a.welcome-btn:hover{color:var(--btn-fg);opacity:.9}
 
 /* hero */
 .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.hero-side{display:flex;align-items:center;gap:12px}
 .eyebrow{font-size:12px;color:var(--muted);margin-bottom:6px}
 .hero h1{margin:0;font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.02em}
 .hero .addr{display:inline-block;margin-top:6px;font:12.5px var(--mono);color:var(--muted);text-decoration:none;word-break:break-all}
@@ -208,6 +209,22 @@ footer a{color:var(--fg-2)}
 [data-skin="kawaii"] .sections a.active{background:#ece9ff;color:#5b4bd6}
 [data-skin="kawaii"] .tag{font-weight:700}
 [data-skin="kawaii"] .bar i{width:72px;background:#ece9ff}
+/* the kawaii mascot: a round friend whose face follows the risk (live in the header, simulated in the stress test) */
+.mascot{display:none}
+[data-skin="kawaii"] .mascot{position:relative;display:inline-flex;align-items:center;justify-content:center;width:58px;height:52px;border-radius:50% 50% 46% 46%;border:2px solid #4a2040;background:#c9f0e0;font:800 14px var(--sans);color:#4a2040;animation:float 3.2s ease-in-out infinite;flex:none}
+[data-skin="kawaii"] .mascot::before,[data-skin="kawaii"] .mascot::after{content:"";position:absolute;bottom:13px;width:8px;height:5px;border-radius:50%;background:#f4a3c1}
+[data-skin="kawaii"] .mascot::before{left:8px}[data-skin="kawaii"] .mascot::after{right:8px}
+[data-skin="kawaii"] .mascot.mini{width:42px;height:38px;font-size:11px}
+[data-skin="kawaii"] .mascot.mini::before,[data-skin="kawaii"] .mascot.mini::after{bottom:9px;width:6px;height:4px}
+[data-skin="kawaii"] .mascot.mini::before{left:5px}[data-skin="kawaii"] .mascot.mini::after{right:5px}
+[data-skin="kawaii"] .mascot[data-mood="worried"]{background:#fde7b8}
+[data-skin="kawaii"] .mascot[data-mood="ko"]{background:#ffc9d6;animation:wobble .5s ease-in-out 2}
+[data-skin="kawaii"] .mascot[data-mood="sleepy"]{background:#ece9ff}
+[data-skin="kawaii"] .mascot.bounce{animation:bounce .45s ease-out}
+@keyframes float{50%{transform:translateY(-4px)}}
+@keyframes bounce{30%{transform:translateY(-10px) scale(1.06,.94)}60%{transform:translateY(0) scale(.96,1.04)}}
+@keyframes wobble{25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+@media (prefers-reduced-motion:reduce){[data-skin="kawaii"] .mascot,[data-skin="kawaii"] .mascot.bounce,[data-skin="kawaii"] .mascot[data-mood="ko"]{animation:none}}
 @media (prefers-reduced-motion:reduce){[data-skin="kawaii"] .stat:hover{transform:none}}
 
 /* ---- skin: neo-brutalist (flat pop colours, thick black borders, hard offset shadows) ---- */
@@ -309,7 +326,10 @@ footer a{color:var(--fg-2)}
       <h1 id="heroTitle">Loading…</h1>
       <a class="addr" id="heroAddr" target="_blank" rel="noopener"></a>
     </div>
-    <span class="pill" id="statusPill"><span class="dot"></span><span id="statusText">Connecting</span></span>
+    <div class="hero-side">
+      <span class="mascot" id="mascot" data-mood="sleepy" aria-hidden="true"><span class="face">-_-</span></span>
+      <span class="pill" id="statusPill"><span class="dot"></span><span id="statusText">Connecting</span></span>
+    </div>
   </div>
 
   <div class="callout" id="banner" role="status" aria-live="polite"><span class="ico">ℹ︎</span><span id="bannerText">Reading the Perpl Exchange contract…</span><span class="meta" id="meta"></span></div>
@@ -342,6 +362,7 @@ footer a{color:var(--fg-2)}
       <label>Shock <select id="simMarket" aria-label="Market to shock"><option value="*">All positions</option></select></label>
       <input type="range" id="simShock" min="-90" max="90" step="1" value="0" aria-label="Price change in percent">
       <output id="simVal" for="simShock">0%</output>
+      <span class="mascot mini" id="simMascot" data-mood="happy" aria-hidden="true"><span class="face">^‿^</span></span>
       <span class="presets" id="simPresets">
         <button type="button" class="ghost" data-shock="-50">−50%</button><button type="button" class="ghost" data-shock="-20">−20%</button><button type="button" class="ghost" data-shock="-10">−10%</button>
         <button type="button" class="ghost" data-shock="10">+10%</button><button type="button" class="ghost" data-shock="20">+20%</button><button type="button" class="ghost" data-shock="50">+50%</button>
@@ -622,6 +643,7 @@ function renderAccount(positions, block) {
   $("heroAddr").href = `${net.explorer}/address/${state.address}`;
   $("heroTitle").textContent = account ? `Account #${account.id}` : "No Perpl account";
   pill.className = "pill " + (!account ? "" : account.frozen || alerts.length ? "pill-bad" : "pill-ok");
+  setMood($("mascot"), !account ? "sleepy" : account.frozen || alerts.length ? "worried" : "happy");
   $("statusText").textContent = !account ? "No account" : account.frozen ? "Frozen" : alerts.length ? `${alerts.length} alert${alerts.length > 1 ? "s" : ""}` : "Risk OK";
   if (!account) { b.className = "callout"; $("bannerText").innerHTML = `<strong>No Perpl account</strong> for <span class="mono">${short(state.address)}</span> on ${esc(net.name)}. Create one with <span class="mono">mm perpl setup</span>.`; }
   else if (account.frozen) { b.className = "callout callout-bad"; $("bannerText").innerHTML = `<strong>Account #${account.id} is frozen.</strong>`; }
@@ -644,6 +666,16 @@ function renderPositions(positions) {
       <td>${fmt(p.marginRatio, 3)}</td><td>${fmt(p.mm * 100, 1)}%</td><td>${Number.isFinite(p.liq) ? fmt(p.liq, p.pd) : "none"}</td>
       <td>${Number.isFinite(d) ? `<span class="bar ${level}"><i><b style="width:${width}%"></b></i>${fmt(d, 1)}%</span>` : `<small>no liquidation</small>`}</td></tr>`;
   }).join("");
+}
+
+// ---- kawaii mascot: its face follows the risk; it hops when its mood changes (hidden in the other skins)
+const FACES = { happy: "^‿^", worried: "•﹏•", ko: "×_×", sleepy: "-_-" };
+function setMood(el, mood) {
+  if (el.dataset.mood === mood) return;
+  el.dataset.mood = mood;
+  el.querySelector(".face").textContent = FACES[mood];
+  el.classList.remove("bounce"); void el.offsetWidth; el.classList.add("bounce");
+  el.addEventListener("animationend", () => el.classList.remove("bounce"), { once: true }); // back to its idle float
 }
 
 // ---- stress test: re-run metrics() at a shocked mark price, client-side only
@@ -673,6 +705,7 @@ function renderSim() {
   const nowEq = account.free + account.locked + lastPositions.reduce((s, p) => s + p.coll + p.upnl, 0);
   const simEq = account.free + account.locked + rows.reduce((s, r) => s + r.p.coll + loss(r), 0);
   const nAlerts = rows.filter((r) => !r.liquidated && r.s.alerts.length).length, nLiq = rows.filter((r) => r.liquidated).length;
+  setMood($("simMascot"), nLiq ? "ko" : nAlerts ? "worried" : "happy");
   $("simSummary").innerHTML = `<span>Equity after the move<b>${fmt(simEq)}</b></span>
     <span>Change<b class="${cls(simEq - nowEq)}">${fmtSigned(simEq - nowEq)}</b></span>
     <span>Positions with an alert<b class="${nAlerts ? "neg" : ""}">${nAlerts}</b></span>
