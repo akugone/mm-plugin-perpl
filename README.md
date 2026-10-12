@@ -28,6 +28,15 @@ in `skills/perpl-trading/SKILL.md`.
 > `enroll` (wallet-signed EIP-712), `status`, a filled market `order`, `positions`, `risk`, and a filled `close`.
 > `deposit` and `signals` (against the live Nansen API) verified live too.
 
+## Videos
+
+| Video | Length | What it shows |
+|---|---|---|
+| [Product demo](https://youtu.be/9qHfKf853f0) | 1:49 | Guard refusal, a filled order, the live dashboard, the close |
+| [MetaMask flows](https://youtu.be/L48QLPm2KGs) | 2:30 | Deposit and key enrollment signed by the MetaMask wallet, its request log, the agent trading in plain English |
+| [Nansen signals](https://youtu.be/00Am9yM53eo) | 1:03 | The agent asks for ideas; smart-money evidence and a guard-sized suggestion |
+| [Pitch](https://youtu.be/3E28VqUDNVU) | 1:53 | The problem, the plugin, why Monad |
+
 ## Why this shape
 
 Perpl's API places orders through **Ed25519 API keys**, not through the wallet: the exchange forwards the order and
