@@ -1,7 +1,7 @@
-# mm-plugin-perpl — perps on Monad for the MetaMask Agent Wallet
+# mm-plugin-perpl: perps on Monad for the MetaMask Agent Wallet
 
 A plugin for the [MetaMask Agent Wallet CLI](https://docs.metamask.io/agent-wallet/) (`mm`) that gives an AI agent's
-wallet a new trading superpower: **perpetual futures on [Perpl](https://perpl.xyz), Monad's on-chain perps DEX** —
+wallet a new trading superpower: **perpetual futures on [Perpl](https://perpl.xyz), Monad's on-chain perps DEX**,
 with the guardrails an agent needs to be trusted with it.
 
 ```
@@ -18,7 +18,7 @@ mm perpl risk        cron-friendly risk check: ok:false + alerts when a threshol
 mm perpl close       close a position at market
 ```
 
-Works with any agent that drives the `mm` CLI — Hermes, Claude Code, Codex, Cursor. A skill for agents is bundled
+Works with any agent that drives the `mm` CLI: Hermes, Claude Code, Codex, Cursor. A skill for agents is bundled
 in `skills/perpl-trading/SKILL.md`.
 
 > **Status (2026-10-07): full loop verified live on Perpl Monad Testnet through `mm` 7.0.0** with a MetaMask server
@@ -46,9 +46,9 @@ outflow limit, Blockaid) **does not see orders**. So this plugin draws the line 
 | Step | Who signs | Who protects |
 |---|---|---|
 | Deposit / create account / enable forwarding | Your MetaMask wallet (`mm wallet`) | MetaMask policy, simulation, Blockaid, 2FA |
-| Authorise the API key (EIP-712) | Your MetaMask wallet | MetaMask policy, 2FA — the wallet prompt spells out "trade-only key" |
+| Authorise the API key (EIP-712) | Your MetaMask wallet | MetaMask policy, 2FA; the wallet prompt spells out "trade-only key" |
 | Place / close orders | The enrolled API key (trade scope only) | **This plugin's guard**: per-order notional, leverage, rolling 24h notional, open positions, allowed markets, confirmation |
-| Withdraw | Impossible with an API key (Perpl rule) | — |
+| Withdraw | Impossible with an API key (Perpl rule) | n/a |
 
 The guard is deliberately shaped like MetaMask's Guard Mode: a rolling 24h cap mirrors the outflow limit, allowed
 markets mirror allowlists, and every order is confirmed by a human unless you deliberately turn that off.
@@ -79,7 +79,7 @@ mm perpl markets --chain-id 10143
 > `mm plugins link` avoids the name bug but mm only grants capabilities to `type: user` plugins, so linked plugins
 > can run `markets` / `guard` / `signals` and nothing that touches the wallet.
 
-Requirements: Node.js ≥ 22.18 (global `fetch` and `WebSocket`; Ed25519 via `node:crypto` — no extra crypto
+Requirements: Node.js ≥ 22.18 (global `fetch` and `WebSocket`; Ed25519 via `node:crypto`, no extra crypto
 dependency), a MetaMask Agent Wallet signed in (`mm login`, `mm init`).
 
 ### Monad Testnet RPC (mm 7)
@@ -101,25 +101,25 @@ needs nothing.
 ## First run, step by step
 
 Chain ids: **10143 = Monad Testnet**, **143 = Monad**. Start on testnet. Your MetaMask wallet policy must allow the
-chain (`mm wallet policy get`; testnet is not in the default allowed set — add it once, one 2FA).
+chain (`mm wallet policy get`; testnet is not in the default allowed set: add it once, one 2FA).
 
-1. `mm perpl status --chain-id 10143` — tells you the next step every time.
-2. `mm perpl setup --chain-id 10143 --deposit 100` — three wallet transactions, each through MetaMask's pipeline:
+1. `mm perpl status --chain-id 10143`: tells you the next step every time.
+2. `mm perpl setup --chain-id 10143 --deposit 100`: three wallet transactions, each through MetaMask's pipeline:
    approve AUSD to the exchange, `createAccount(amount)`, `allowOrderForwarding(true)` (Perpl's "one-click
-   trading", required for API orders). This also creates your Perpl **profile**, which an API key attaches to —
+   trading", required for API orders). This also creates your Perpl **profile**, which an API key attaches to:
    enrolling before the account exists fails with `PERPL_PROFILE_NOT_FOUND` (Perpl answers 404). The wallet needs
    AUSD for the deposit (≥ 100 on testnet) and a little MON for gas: testnet MON from the Monad faucet (faucet.monad.xyz). There is
    no testnet AUSD faucet: a Perpl testnet account opened from the web app is credited with testnet AUSD, which
    you can withdraw in the app and send to the agent wallet.
-3. `mm perpl enroll --chain-id 10143` — generates an Ed25519 key locally, asks Perpl for the EIP-712 enrollment
+3. `mm perpl enroll --chain-id 10143`: generates an Ed25519 key locally, asks Perpl for the EIP-712 enrollment
    payload, **your MetaMask wallet signs it** (you may get a 2FA), proves possession of the key, stores it at
    `~/.config/mm-plugin-perpl/credentials.json` (0600). Scope: trade only. Default lifetime 30 days.
-4. `mm perpl guard` — defaults: **$100 per order, 3x, $300 per rolling 24h, 3 open positions, all markets,
+4. `mm perpl guard`: defaults are **$100 per order, 3x, $300 per rolling 24h, 3 open positions, all markets,
    confirmation required.** Raise them deliberately: `mm perpl guard --max-notional-usd 250 --max-leverage 5`.
-5. `mm perpl signals` (needs `NANSEN_API_KEY`) — ideas with evidence, sized by the guard.
-6. `mm perpl order --market BTC --side long --notional-usd 50 --leverage 2 --yes` — guard check → confirm →
+5. `mm perpl signals` (needs `NANSEN_API_KEY`): ideas with evidence, sized by the guard.
+6. `mm perpl order --market BTC --side long --notional-usd 50 --leverage 2 --yes`: guard check → confirm →
    forwarded → status, fill price. `--dry-run` shows everything without sending.
-7. `mm perpl risk --json` from a cron — `ok: false` + `alerts[]` when margin ratio, loss or liquidation distance
+7. `mm perpl risk --json` from a cron: `ok: false` + `alerts[]` when margin ratio, loss or liquidation distance
    cross your thresholds.
 
 ## Commands
@@ -199,7 +199,7 @@ Estimates are first-order (mark price, published maintenance margin, no funding/
   ever asks it to sign through `ctx.walletExecutor`, so every wallet action goes through MetaMask's policy,
   simulation, Blockaid and 2FA. The Perpl API key is a separate Ed25519 seed generated locally, trade scope only,
   time-limited, revocable in Perpl's web UI (`/apikeys`), stored 0600 and never passed on argv.
-- **Withdrawals are impossible via the API key** — a Perpl rule, not a plugin promise.
+- **Withdrawals are impossible via the API key**: a Perpl rule, not a plugin promise.
 - **Guardrails before every order**, with the caps and confirmation described above.
 - **Hostile-input hygiene.** Symbols and error texts from the exchange are used as data; every numeric input is
   validated against the market's decimals; nothing from the network is interpolated into shell commands.
