@@ -1,7 +1,16 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-skin="clean" data-skins="clean">
 <head>
 <meta charset="utf-8">
+<script>
+// Pick the skin before the first paint: ?theme= wins, then the viewer's last choice, then the default on <html>.
+(function () {
+  var r = document.documentElement, skins = r.dataset.skins.split(" "), saved = null;
+  var asked = new URLSearchParams(location.search).get("theme");
+  try { saved = localStorage.getItem("pam-skin"); } catch (e) {}
+  if (skins.indexOf(asked) >= 0) r.dataset.skin = asked; else if (skins.indexOf(saved) >= 0) r.dataset.skin = saved;
+})();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Perpl Agent Monitor</title>
 <meta name="description" content="Live positions, PnL and liquidation risk of an AI agent's wallet trading perps on Perpl (Monad), read straight from the exchange contract.">
@@ -64,6 +73,11 @@ select{font-family:var(--sans)}
 button{height:32px;border-radius:var(--r-ctl);border:var(--bw) solid var(--btn);background:var(--btn);color:var(--btn-fg);padding:0 14px;font:500 13px var(--sans);cursor:pointer}
 button.ghost{background:transparent;color:var(--muted);border-color:var(--line);padding:0 9px}
 button.ghost:hover{color:var(--fg);background:var(--hover)}
+.skin-btn{display:inline-flex;align-items:center;gap:6px;padding:0 10px}
+.skin-btn svg{width:16px;height:16px}
+:root:not([data-skin="clean"]) #theme{display:none} /* light and dark only apply to the clean skin */
+.skin-switching,.skin-switching *{transition:background-color .35s,color .35s,border-color .35s,box-shadow .35s}
+@media (prefers-reduced-motion:reduce){.skin-switching,.skin-switching *{transition:none}}
 
 /* section menu: anchors land below the sticky header, whatever its height */
 .sections{border-top:1px solid var(--line)}
@@ -187,6 +201,7 @@ footer a{color:var(--fg-2)}
         <option value="143">Monad</option>
       </select>
       <button type="submit">Watch</button>
+      <button type="button" class="ghost skin-btn" id="skin" title="Change the look"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.8 1.7-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H16a5 5 0 0 0 5-5c0-3.9-4-7.2-9-7.2z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="7.5" cy="11" r="1.3" fill="currentColor"/><circle cx="10.5" cy="7.5" r="1.3" fill="currentColor"/><circle cx="15" cy="7.5" r="1.3" fill="currentColor"/></svg><span id="skinName">Clean</span></button>
       <button type="button" class="ghost" id="theme" aria-label="Toggle dark mode" title="Toggle dark mode">◐</button>
     </form>
   </div>
@@ -354,6 +369,20 @@ function highlightSection() {
 }
 addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(highlightSection); } }, { passive: true });
 highlightSection();
+
+// skins: each one is a block of CSS variables keyed on <html data-skin>; the button cycles through them
+const SKIN_NAMES = { clean: "Clean" };
+const skins = document.documentElement.dataset.skins.split(" ");
+function showSkin() { $("skinName").textContent = SKIN_NAMES[document.documentElement.dataset.skin] ?? document.documentElement.dataset.skin; }
+showSkin();
+$("skin").onclick = () => {
+  const r = document.documentElement;
+  r.classList.add("skin-switching");
+  r.dataset.skin = skins[(skins.indexOf(r.dataset.skin) + 1) % skins.length];
+  try { localStorage.setItem("pam-skin", r.dataset.skin); } catch {}
+  showSkin();
+  setTimeout(() => r.classList.remove("skin-switching"), 400);
+};
 
 // theme toggle (per-viewer convenience only)
 const root = document.documentElement;
