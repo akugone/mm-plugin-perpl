@@ -170,7 +170,7 @@ reports `creditsSpent` from Nansen's response headers.
 
 ## Dashboard: the human's view
 
-**[perpl-agent-monitor.vercel.app](https://perpl-agent-monitor.vercel.app/)**: Perpl Agent Monitor, in a soft black-and-white UI (light and dark). The agent trades
+**[perpl-agent-monitor.vercel.app](https://perpl-agent-monitor.vercel.app/)**: Perpl Agent Monitor. The agent trades
 through `mm perpl`; the human watches here, without a terminal. For any wallet (`?address=0x…`, Monad Testnet or
 Monad): equity, free and posted collateral, open positions with PnL, funding paid so far and per day at the current
 rate, margin ratio, maintenance margin, estimated
@@ -180,6 +180,9 @@ liquidation price and distance, alerts with the same thresholds as `mm perpl ris
 - **Stress test**: a price slider (−90% to +90%, one market or all) re-runs the risk maths on the live positions and
   shows the simulated PnL, margin ratio, liquidation distance, alerts, liquidations and equity after the move.
   Simulation only, nothing is sent.
+- **Skins**: a palette button in the header cycles four looks: Kawaii (the default, with a mascot whose face follows
+  the live risk and the stress test), Clean (black and white, light or dark), Brutal (neo-brutalist) and Monad night.
+  `?theme=kawaii|clean|brutal|monad` picks one; the choice is remembered per viewer.
 - **Protocol view**: AUSD held by the exchange, total open interest, insurance funds, and per market its share of open
   interest, insurance fund, resting orders, funding and margin parameters, with the watched account's share next to it.
 
