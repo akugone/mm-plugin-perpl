@@ -172,7 +172,8 @@ reports `creditsSpent` from Nansen's response headers.
 
 **[perpl-agent-monitor.vercel.app](https://perpl-agent-monitor.vercel.app/)**: Perpl Agent Monitor, in a soft black-and-white UI (light and dark). The agent trades
 through `mm perpl`; the human watches here, without a terminal. For any wallet (`?address=0x…`, Monad Testnet or
-Monad): equity, free and posted collateral, open positions with PnL, margin ratio, maintenance margin, estimated
+Monad): equity, free and posted collateral, open positions with PnL, funding paid so far and per day at the current
+rate, margin ratio, maintenance margin, estimated
 liquidation price and distance, alerts with the same thresholds as `mm perpl risk`, and the account's activity
 (account created, deposits, opens, closes, liquidations, with explorer links). Refreshes every 5 s.
 
