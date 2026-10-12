@@ -351,10 +351,18 @@ async function scanEntries(positions) {
 
 function view(p, pos, markPNS) {
   const side = Number(pos.positionType) === 0 ? "long" : "short";
-  const dir = side === "long" ? 1 : -1;
-  const size = scale(pos.lotLNS, p.ld), entry = scale(pos.pricePNS, p.pd), mark = scale(markPNS, p.pd), coll = scale(pos.depositCNS, collDec);
+  const base = {
+    market: p.symbol, pd: p.pd, ld: p.ld, side, dir: side === "long" ? 1 : -1,
+    size: scale(pos.lotLNS, p.ld), entry: scale(pos.pricePNS, p.pd), coll: scale(pos.depositCNS, collDec),
+    mm: p.maintHdths > 0 ? 100 / p.maintHdths : 0.05, entryBlock: pos.entryBlock,
+  };
+  return metrics(base, scale(markPNS, p.pd));
+}
+
+// Everything that depends on the mark price, so the stress test can re-run it at any price.
+function metrics(base, mark) {
+  const { pd, dir, size, entry, coll, mm } = base;
   const notional = size * mark, upnl = (mark - entry) * size * dir, equity = coll + upnl;
-  const mm = p.maintHdths > 0 ? 100 / p.maintHdths : 0.05;
   const denom = size * (dir - mm);
   const liq = denom !== 0 ? (entry * size * dir - coll) / denom : NaN;
   const dist = Number.isFinite(liq) && liq > 0 ? Math.abs(mark - liq) / mark : NaN;
@@ -363,8 +371,8 @@ function view(p, pos, markPNS) {
   const alerts = [];
   if (marginRatio < T.minMarginRatio) alerts.push(`margin ratio ${fmt(marginRatio, 3)} below ${T.minMarginRatio}`);
   if (lossPct > T.maxLossPct) alerts.push(`loss ${fmt(lossPct, 1)}% of collateral above ${T.maxLossPct}%`);
-  if (Number.isFinite(dist) && dist * 100 < T.minLiqDistancePct) alerts.push(`estimated liquidation ${fmt(dist * 100, 1)}% away (${fmt(liq, p.pd)})`);
-  return { market: p.symbol, pd: p.pd, ld: p.ld, side, size, entry, mark, coll, notional, upnl, upnlPct: coll > 0 ? (upnl / coll) * 100 : NaN, lev: coll > 0 ? notional / coll : NaN, marginRatio, mm, liq, dist, alerts, entryBlock: pos.entryBlock };
+  if (Number.isFinite(dist) && dist * 100 < T.minLiqDistancePct) alerts.push(`estimated liquidation ${fmt(dist * 100, 1)}% away (${fmt(liq, pd)})`);
+  return { ...base, mark, notional, upnl, upnlPct: coll > 0 ? (upnl / coll) * 100 : NaN, lev: coll > 0 ? notional / coll : NaN, marginRatio, liq, dist, alerts };
 }
 
 function renderAccount(positions, block) {
