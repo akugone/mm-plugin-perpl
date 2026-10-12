@@ -63,6 +63,16 @@ button{height:32px;border-radius:8px;border:1px solid var(--btn);background:var(
 button.ghost{background:transparent;color:var(--muted);border-color:var(--line);padding:0 9px}
 button.ghost:hover{color:var(--fg);background:var(--hover)}
 
+/* section menu: anchors land below the sticky header, whatever its height */
+.sections{border-top:1px solid var(--line)}
+.sections-row{display:flex;gap:4px;max-width:1160px;margin:0 auto;padding:6px 24px;overflow-x:auto;scrollbar-width:none}
+.sections-row::-webkit-scrollbar{display:none}
+.sections a{flex:none;padding:4px 10px;border-radius:6px;font-size:12.5px;color:var(--muted);text-decoration:none;white-space:nowrap}
+.sections a:hover{color:var(--fg);background:var(--hover)}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.hero,section.panel{scroll-margin-top:calc(var(--header-h,110px) + 12px)}
+
 .app{max-width:1160px;margin:0 auto;padding:28px 24px 56px}
 
 /* hero */
@@ -164,10 +174,13 @@ footer a{color:var(--fg-2)}
       <button type="button" class="ghost" id="theme" aria-label="Toggle dark mode" title="Toggle dark mode">◐</button>
     </form>
   </div>
+  <nav class="sections" aria-label="Sections"><div class="sections-row">
+    <a href="#overview">Overview</a><a href="#sec-positions">Positions</a><a href="#sec-alerts">Alerts</a><a href="#sec-stress">Stress test</a><a href="#sec-activity">Activity</a><a href="#sec-protocol">Protocol</a>
+  </div></nav>
 </header>
 
 <main class="app">
-  <div class="hero">
+  <div class="hero" id="overview">
     <div>
       <div class="eyebrow">Agent wallet on Perpl</div>
       <h1 id="heroTitle">Loading…</h1>
@@ -187,7 +200,7 @@ footer a{color:var(--fg-2)}
     <div class="stat"><div class="l">Open positions</div><div class="v" id="k-n">—</div></div>
   </div>
 
-  <section class="panel">
+  <section class="panel" id="sec-positions">
     <div class="panel-head"><h2>Open positions</h2><span class="hint">Liquidation is a first-order estimate: mark price and maintenance margin, no funding or fees.</span></div>
     <div class="table-wrap"><table>
       <thead><tr><th>Market</th><th>Side</th><th>Size</th><th>Entry</th><th>Mark</th><th>Notional</th><th>Collateral</th><th>Lev.</th><th>uPnL</th><th>Margin ratio</th><th>Maint.</th><th>Liq. (est.)</th><th>Distance</th></tr></thead>
@@ -195,12 +208,12 @@ footer a{color:var(--fg-2)}
     </table></div>
   </section>
 
-  <section class="panel">
+  <section class="panel" id="sec-alerts">
     <div class="panel-head"><h2>Alerts</h2><span class="hint" id="thresholds"></span></div>
     <ul class="alerts" id="alerts"><li class="empty">No alert.</li></ul>
   </section>
 
-  <section class="panel">
+  <section class="panel" id="sec-stress">
     <div class="panel-head"><h2>Stress test</h2><span class="hint">Move the price and watch PnL, margin and liquidation react, with the same thresholds. Simulation only: nothing is sent.</span></div>
     <div class="sim-controls">
       <label>Shock <select id="simMarket" aria-label="Market to shock"><option value="*">All positions</option></select></label>
@@ -219,7 +232,7 @@ footer a{color:var(--fg-2)}
     </table></div>
   </section>
 
-  <section class="panel">
+  <section class="panel" id="sec-activity">
     <div class="panel-head"><h2>Agent activity</h2><span class="hint">Account created, deposits, opens, closes and liquidations</span></div>
     <div class="table-wrap"><table>
       <thead><tr><th>When</th><th>Event</th><th>Market</th><th>Side</th><th>Price</th><th>Size / amount</th><th>PnL</th><th>Tx</th></tr></thead>
@@ -228,7 +241,7 @@ footer a{color:var(--fg-2)}
     <div class="foot-note" id="scan"></div>
   </section>
 
-  <section class="panel">
+  <section class="panel" id="sec-protocol">
     <div class="panel-head"><h2>Protocol</h2><span class="hint">Every Perpl perpetual, read from the exchange contract, with this account's footprint next to it</span></div>
     <div class="stats proto">
       <div class="stat"><div class="l">AUSD held by the exchange</div><div class="v" id="p-bal">—</div></div>
@@ -288,6 +301,10 @@ const T = {
   minLiqDistancePct: num(params.get("minLiqDistancePct"), 10),
 };
 $("thresholds").textContent = `margin ratio < ${T.minMarginRatio}, loss > ${T.maxLossPct}% of collateral, liquidation < ${T.minLiqDistancePct}% away`;
+
+// keep anchor targets clear of the sticky header (it wraps onto more lines on small screens)
+const header = document.querySelector(".topbar");
+new ResizeObserver(() => document.documentElement.style.setProperty("--header-h", header.offsetHeight + "px")).observe(header);
 
 // theme toggle (per-viewer convenience only)
 const root = document.documentElement;
