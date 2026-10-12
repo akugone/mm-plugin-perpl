@@ -124,6 +124,17 @@ small{color:var(--muted);font-size:11px}
 .alerts li:last-child{border-bottom:0}
 .alerts li b{color:var(--red);font-weight:600}
 .alerts li.empty{border:0}
+/* stress test */
+.sim-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--line)}
+.sim-controls label{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+input[type=range]{flex:1 1 220px;width:auto;height:24px;padding:0;border:0;background:transparent;accent-color:var(--fg)}
+.sim-controls output{min-width:56px;text-align:right;font:600 15px var(--mono)}
+.presets{display:inline-flex;gap:6px;flex-wrap:wrap}
+.presets button{height:28px;font:500 12px var(--mono)}
+.sim-summary{display:flex;gap:28px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.sim-summary b{display:block;margin-top:2px;font:600 16px var(--mono);color:var(--fg)}
+.tag.ok{background:var(--green-soft);color:var(--green);border-color:transparent}
+.tag.warn{background:var(--amber-soft);color:var(--amber);border-color:transparent}
 .foot-note{padding:10px 16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
 a.tx{font-family:var(--mono);color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line)}
 a.tx:hover{color:var(--fg);border-color:var(--fg)}
@@ -184,6 +195,25 @@ footer a{color:var(--fg-2)}
   <section class="panel">
     <div class="panel-head"><h2>Alerts</h2><span class="hint" id="thresholds"></span></div>
     <ul class="alerts" id="alerts"><li class="empty">No alert.</li></ul>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Stress test</h2><span class="hint">Move the price and watch PnL, margin and liquidation react, with the same thresholds. Simulation only: nothing is sent.</span></div>
+    <div class="sim-controls">
+      <label>Shock <select id="simMarket" aria-label="Market to shock"><option value="*">All positions</option></select></label>
+      <input type="range" id="simShock" min="-90" max="90" step="1" value="0" aria-label="Price change in percent">
+      <output id="simVal" for="simShock">0%</output>
+      <span class="presets" id="simPresets">
+        <button type="button" class="ghost" data-shock="-50">−50%</button><button type="button" class="ghost" data-shock="-20">−20%</button><button type="button" class="ghost" data-shock="-10">−10%</button>
+        <button type="button" class="ghost" data-shock="10">+10%</button><button type="button" class="ghost" data-shock="20">+20%</button><button type="button" class="ghost" data-shock="50">+50%</button>
+        <button type="button" class="ghost" data-shock="0">Reset</button>
+      </span>
+    </div>
+    <div class="sim-summary" id="simSummary"></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Market</th><th>Side</th><th>Mark now</th><th>Simulated mark</th><th>uPnL</th><th>Margin ratio</th><th>Liq. distance</th><th>Status</th></tr></thead>
+      <tbody id="simRows"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+    </table></div>
   </section>
 
   <section class="panel">
@@ -330,6 +360,8 @@ async function refresh() {
   }
   renderAccount(positions, block);
   renderPositions(positions);
+  lastPositions = positions;
+  renderSim();
   renderMarkets(live);
   scanEntries(positions).then((found) => found && renderActivity()).catch(() => {});
   return block.number;
@@ -415,6 +447,55 @@ function renderPositions(positions) {
       <td>${Number.isFinite(d) ? `<span class="bar ${level}"><i><b style="width:${width}%"></b></i>${fmt(d, 1)}%</span>` : `<small>no liquidation</small>`}</td></tr>`;
   }).join("");
 }
+
+// ---- stress test: re-run metrics() at a shocked mark price, client-side only
+let lastPositions = [];
+const sim = { market: "*", shock: 0 };
+function renderSim() {
+  const sel = $("simMarket"), markets = lastPositions.map((p) => p.market);
+  if ([...sel.options].map((o) => o.value).join() !== ["*", ...markets].join()) {
+    sel.innerHTML = `<option value="*">All positions</option>` + markets.map((m) => `<option value="${esc(m)}">${esc(m)}</option>`).join("");
+    if (sim.market !== "*" && !markets.includes(sim.market)) sim.market = "*";
+    sel.value = sim.market;
+  }
+  $("simShock").value = String(sim.shock);
+  $("simVal").textContent = `${sim.shock > 0 ? "+" : sim.shock < 0 ? "−" : ""}${Math.abs(sim.shock)}%`;
+  if (!account || !lastPositions.length) {
+    $("simSummary").innerHTML = "";
+    $("simRows").innerHTML = `<tr><td colspan="8" class="empty">${account ? "No open position to stress." : "No account."}</td></tr>`;
+    return;
+  }
+  const rows = lastPositions.map((p) => {
+    const hit = sim.market === "*" || sim.market === p.market;
+    const mark = p.mark * (1 + (hit ? sim.shock : 0) / 100);
+    const liquidated = Number.isFinite(p.liq) && (p.dir > 0 ? mark <= p.liq : mark >= p.liq);
+    return { p, s: metrics(p, mark), liquidated };
+  });
+  const loss = (r) => (r.liquidated ? -r.p.coll : r.s.upnl);
+  const nowEq = account.free + account.locked + lastPositions.reduce((s, p) => s + p.coll + p.upnl, 0);
+  const simEq = account.free + account.locked + rows.reduce((s, r) => s + r.p.coll + loss(r), 0);
+  const nAlerts = rows.filter((r) => !r.liquidated && r.s.alerts.length).length, nLiq = rows.filter((r) => r.liquidated).length;
+  $("simSummary").innerHTML = `<span>Equity after the move<b>${fmt(simEq)}</b></span>
+    <span>Change<b class="${cls(simEq - nowEq)}">${fmtSigned(simEq - nowEq)}</b></span>
+    <span>Positions with an alert<b class="${nAlerts ? "neg" : ""}">${nAlerts}</b></span>
+    <span>Liquidated<b class="${nLiq ? "neg" : ""}">${nLiq}</b></span>`;
+  $("simRows").innerHTML = rows.map(({ p, s, liquidated }) => {
+    const d = s.dist * 100;
+    const status = liquidated ? `<span class="tag liq">Liquidated</span>`
+      : s.alerts.length ? `<span class="tag warn" title="${esc(s.alerts.join("; "))}">Alert</span> <small>${esc(s.alerts[0])}</small>`
+      : `<span class="tag ok">OK</span>`;
+    return `<tr class="${liquidated || s.alerts.length ? "flag" : ""}">
+      <td><strong>${esc(p.market)}</strong></td><td><span class="side ${p.side}">${p.side}</span></td>
+      <td>${fmt(p.mark, p.pd)}</td><td>${fmt(s.mark, p.pd)}</td>
+      <td class="${cls(loss({ p, s, liquidated }))}">${fmtSigned(liquidated ? -p.coll : s.upnl)}</td>
+      <td>${liquidated ? "—" : fmt(s.marginRatio, 3)}</td>
+      <td>${liquidated ? "passed" : Number.isFinite(d) ? fmt(d, 1) + "%" : "no liquidation"}</td>
+      <td style="text-align:left">${status}</td></tr>`;
+  }).join("");
+}
+$("simShock").oninput = (e) => { sim.shock = Number(e.target.value); renderSim(); };
+$("simMarket").onchange = (e) => { sim.market = e.target.value; renderSim(); };
+$("simPresets").onclick = (e) => { const b = e.target.closest("button[data-shock]"); if (b) { sim.shock = Number(b.dataset.shock); renderSim(); } };
 
 function renderMarkets(live) {
   $("markets").innerHTML = live.filter((p) => p.info).map((p) => {
