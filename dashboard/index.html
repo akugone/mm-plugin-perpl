@@ -331,7 +331,22 @@ async function refresh() {
   renderAccount(positions, block);
   renderPositions(positions);
   renderMarkets(live);
+  scanEntries(positions).then((found) => found && renderActivity()).catch(() => {});
   return block.number;
+}
+
+// Each open position records the block it was opened in: read that one block so its opening trade stays in the
+// activity feed however old it is, without scanning the whole chain.
+const entriesScanned = new Set();
+async function scanEntries(positions) {
+  let found = false;
+  for (const p of positions) {
+    const b = p.entryBlock;
+    if (!b || entriesScanned.has(b)) continue;
+    entriesScanned.add(b);
+    try { await scanRange(b, b); found = true; } catch { entriesScanned.delete(b); }
+  }
+  return found;
 }
 
 function view(p, pos, markPNS) {
@@ -349,7 +364,7 @@ function view(p, pos, markPNS) {
   if (marginRatio < T.minMarginRatio) alerts.push(`margin ratio ${fmt(marginRatio, 3)} below ${T.minMarginRatio}`);
   if (lossPct > T.maxLossPct) alerts.push(`loss ${fmt(lossPct, 1)}% of collateral above ${T.maxLossPct}%`);
   if (Number.isFinite(dist) && dist * 100 < T.minLiqDistancePct) alerts.push(`estimated liquidation ${fmt(dist * 100, 1)}% away (${fmt(liq, p.pd)})`);
-  return { market: p.symbol, pd: p.pd, ld: p.ld, side, size, entry, mark, coll, notional, upnl, upnlPct: coll > 0 ? (upnl / coll) * 100 : NaN, lev: coll > 0 ? notional / coll : NaN, marginRatio, mm, liq, dist, alerts };
+  return { market: p.symbol, pd: p.pd, ld: p.ld, side, size, entry, mark, coll, notional, upnl, upnlPct: coll > 0 ? (upnl / coll) * 100 : NaN, lev: coll > 0 ? notional / coll : NaN, marginRatio, mm, liq, dist, alerts, entryBlock: pos.entryBlock };
 }
 
 function renderAccount(positions, block) {
@@ -458,7 +473,7 @@ async function backfill(head) {
     }
   };
   await Promise.all(Array.from({ length: 4 }, worker));
-  $("scan").textContent = `Activity since block #${start.toLocaleString("en-US")} (${total * LOG_RANGE} blocks scanned), then live. Older history: add ?from=<block> to the URL.`;
+  $("scan").textContent = `Activity since block #${start.toLocaleString("en-US")} (${total * LOG_RANGE} blocks scanned), then live, plus the opening trade of every open position. Older history: add ?from=<block> to the URL.`;
   await renderActivity();
 }
 async function tail(head) {
