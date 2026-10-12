@@ -228,8 +228,8 @@ footer a{color:var(--fg-2)}
   <section class="panel">
     <div class="panel-head"><h2>Markets</h2><span class="hint">On-chain state of every Perpl perpetual</span></div>
     <div class="table-wrap"><table>
-      <thead><tr><th>Market</th><th>Mark</th><th>Open interest</th><th>Funding</th><th>Max lev.</th><th>Maint.</th></tr></thead>
-      <tbody id="markets"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+      <thead><tr><th>Market</th><th>Mark</th><th>Open interest</th><th>Share of OI</th><th>This account</th><th>Insurance (AUSD)</th><th>Resting orders</th><th>Funding</th><th>Max lev.</th><th>Maint.</th></tr></thead>
+      <tbody id="markets"><tr><td colspan="10" class="empty">Loading…</td></tr></tbody>
     </table></div>
   </section>
 
@@ -362,7 +362,7 @@ async function refresh() {
   renderPositions(positions);
   lastPositions = positions;
   renderSim();
-  renderMarkets(live);
+  renderMarkets(live, positions);
   scanEntries(positions).then((found) => found && renderActivity()).catch(() => {});
   return block.number;
 }
@@ -497,13 +497,24 @@ $("simShock").oninput = (e) => { sim.shock = Number(e.target.value); renderSim()
 $("simMarket").onchange = (e) => { sim.market = e.target.value; renderSim(); };
 $("simPresets").onclick = (e) => { const b = e.target.closest("button[data-shock]"); if (b) { sim.shock = Number(b.dataset.shock); renderSim(); } };
 
-function renderMarkets(live) {
-  $("markets").innerHTML = live.filter((p) => p.info).map((p) => {
-    const v = p.info, mark = scale(v.markPNS, p.pd), oi = Math.max(scale(v.longOpenInterestLNS, p.ld), scale(v.shortOpenInterestLNS, p.ld));
-    const fr = Number(v.fundingRatePct100k) / 1000; // percent per funding interval
-    return `<tr><td><strong>${esc(v.symbol)}</strong></td><td>${fmt(mark, p.pd)}</td><td>$${fmt(oi * mark, 0)}</td>
+// Protocol-level view, with the watched account's own footprint in each market next to it.
+function renderMarkets(live, positions) {
+  const rows = live.filter((p) => p.info).map((p) => {
+    const v = p.info, mark = scale(v.markPNS, p.pd);
+    // every long has a short on the other side, so long and short open interest are equal: count one side
+    const oiUsd = Math.max(scale(v.longOpenInterestLNS, p.ld), scale(v.shortOpenInterestLNS, p.ld)) * mark;
+    const mine = positions.find((x) => x.market === v.symbol);
+    return { p, v, mark, oiUsd, mine, fr: Number(v.fundingRatePct100k) / 1000 }; // funding: percent per interval
+  });
+  const totalOi = rows.reduce((s, r) => s + r.oiUsd, 0);
+  $("markets").innerHTML = rows.sort((a, b) => b.oiUsd - a.oiUsd).map(({ p, v, mark, oiUsd, mine, fr }) => {
+    const share = totalOi > 0 ? (oiUsd / totalOi) * 100 : 0;
+    const own = mine && oiUsd > 0 ? `<span class="side ${mine.side}">${mine.side}</span> ${fmt((mine.notional / oiUsd) * 100, 3)}%` : "";
+    return `<tr><td><strong>${esc(v.symbol)}</strong></td><td>${fmt(mark, p.pd)}</td><td>$${fmt(oiUsd, 0)}</td>
+      <td><span class="bar"><i><b style="width:${Math.max(share > 0 ? 2 : 0, share)}%"></b></i>${fmt(share, 1)}%</span></td><td>${own}</td>
+      <td>${fmt(scale(v.insuranceBalanceCNS, collDec), 0)}</td><td>${Number(v.numOrders).toLocaleString("en-US")}</td>
       <td class="${cls(fr)}">${fmtSigned(fr, 3)}%</td><td>${p.initHdths ? fmt(p.initHdths / 100, 0) + "x" : "—"}</td><td>${p.maintHdths ? fmt(100 / p.maintHdths * 100, 1) + "%" : "—"}</td></tr>`;
-  }).join("") || `<tr><td colspan="6" class="empty">No market.</td></tr>`;
+  }).join("") || `<tr><td colspan="10" class="empty">No market.</td></tr>`;
 }
 
 // ---- activity: Perpl events carry no indexed account, so scan logs in 100-block windows and filter client-side
