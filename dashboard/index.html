@@ -135,6 +135,9 @@ input[type=range]{flex:1 1 220px;width:auto;height:24px;padding:0;border:0;backg
 .sim-summary b{display:block;margin-top:2px;font:600 16px var(--mono);color:var(--fg)}
 .tag.ok{background:var(--green-soft);color:var(--green);border-color:transparent}
 .tag.warn{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+.stats.proto{padding:14px 16px;border-bottom:1px solid var(--line)}
+.stats.proto .stat{border:0;padding:0;background:transparent}
+.stats.proto .v{font-size:18px}
 .foot-note{padding:10px 16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
 a.tx{font-family:var(--mono);color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line)}
 a.tx:hover{color:var(--fg);border-color:var(--fg)}
@@ -226,7 +229,14 @@ footer a{color:var(--fg-2)}
   </section>
 
   <section class="panel">
-    <div class="panel-head"><h2>Markets</h2><span class="hint">On-chain state of every Perpl perpetual</span></div>
+    <div class="panel-head"><h2>Protocol</h2><span class="hint">Every Perpl perpetual, read from the exchange contract, with this account's footprint next to it</span></div>
+    <div class="stats proto">
+      <div class="stat"><div class="l">AUSD held by the exchange</div><div class="v" id="p-bal">—</div></div>
+      <div class="stat"><div class="l">Total open interest</div><div class="v" id="p-oi">—</div></div>
+      <div class="stat"><div class="l">Insurance funds (AUSD)</div><div class="v" id="p-ins">—</div></div>
+      <div class="stat"><div class="l">Markets with open interest</div><div class="v" id="p-n">—</div></div>
+      <div class="stat"><div class="l">This account's share of OI</div><div class="v" id="p-mine">—</div></div>
+    </div>
     <div class="table-wrap"><table>
       <thead><tr><th>Market</th><th>Mark</th><th>Open interest</th><th>Share of OI</th><th>This account</th><th>Insurance (AUSD)</th><th>Resting orders</th><th>Funding</th><th>Max lev.</th><th>Maint.</th></tr></thead>
       <tbody id="markets"><tr><td colspan="10" class="empty">Loading…</td></tr></tbody>
@@ -342,11 +352,14 @@ async function refresh() {
   const calls = [
     { ...ex, functionName: "getAccountByAddr", args: [state.address] },
     ...perps.map((p) => ({ ...ex, functionName: "getPerpetualInfoV2", args: [BigInt(p.id)] })),
+    { ...ex, functionName: "getExchangeInfo" },
   ];
   const [res, block] = await Promise.all([client.multicall({ contracts: calls, allowFailure: true }), client.getBlock()]);
   const acc = res[0];
   account = acc.status === "success" ? { id: acc.result.accountId, free: scale(acc.result.balanceCNS, collDec), locked: scale(acc.result.lockedBalanceCNS, collDec), frozen: Number(acc.result.frozen) } : null;
   const live = perps.map((p, i) => ({ ...p, info: res[i + 1].status === "success" ? res[i + 1].result : null }));
+  const exInfo = res[perps.length + 1];
+  const exchangeBalance = exInfo.status === "success" ? scale(exInfo.result[0], collDec) : NaN;
 
   let positions = [];
   if (account) {
@@ -362,7 +375,7 @@ async function refresh() {
   renderPositions(positions);
   lastPositions = positions;
   renderSim();
-  renderMarkets(live, positions);
+  renderMarkets(live, positions, exchangeBalance);
   scanEntries(positions).then((found) => found && renderActivity()).catch(() => {});
   return block.number;
 }
@@ -498,7 +511,7 @@ $("simMarket").onchange = (e) => { sim.market = e.target.value; renderSim(); };
 $("simPresets").onclick = (e) => { const b = e.target.closest("button[data-shock]"); if (b) { sim.shock = Number(b.dataset.shock); renderSim(); } };
 
 // Protocol-level view, with the watched account's own footprint in each market next to it.
-function renderMarkets(live, positions) {
+function renderMarkets(live, positions, exchangeBalance) {
   const rows = live.filter((p) => p.info).map((p) => {
     const v = p.info, mark = scale(v.markPNS, p.pd);
     // every long has a short on the other side, so long and short open interest are equal: count one side
@@ -507,6 +520,13 @@ function renderMarkets(live, positions) {
     return { p, v, mark, oiUsd, mine, fr: Number(v.fundingRatePct100k) / 1000 }; // funding: percent per interval
   });
   const totalOi = rows.reduce((s, r) => s + r.oiUsd, 0);
+  const insurance = rows.reduce((s, r) => s + scale(r.v.insuranceBalanceCNS, collDec), 0);
+  const mineOi = positions.reduce((s, x) => s + x.notional, 0);
+  $("p-bal").textContent = fmt(exchangeBalance, 0);
+  $("p-oi").textContent = "$" + fmt(totalOi, 0);
+  $("p-ins").textContent = fmt(insurance, 0);
+  $("p-n").textContent = `${rows.filter((r) => r.oiUsd > 0).length} of ${rows.length}`;
+  $("p-mine").textContent = totalOi > 0 ? `${fmt((mineOi / totalOi) * 100, 3)}%` : "—";
   $("markets").innerHTML = rows.sort((a, b) => b.oiUsd - a.oiUsd).map(({ p, v, mark, oiUsd, mine, fr }) => {
     const share = totalOi > 0 ? (oiUsd / totalOi) * 100 : 0;
     const own = mine && oiUsd > 0 ? `<span class="side ${mine.side}">${mine.side}</span> ${fmt((mine.notional / oiUsd) * 100, 3)}%` : "";
