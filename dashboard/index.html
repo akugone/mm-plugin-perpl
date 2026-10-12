@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-skin="clean" data-skins="clean kawaii brutal">
+<html lang="en" data-skin="clean" data-skins="clean kawaii brutal monad">
 <head>
 <meta charset="utf-8">
 <script>
@@ -246,6 +246,26 @@ footer a{color:var(--fg-2)}
 [data-skin="brutal"] .bar.ok i b{background:#2ee59d}[data-skin="brutal"] .bar.warn i b{background:#ffd166}[data-skin="brutal"] .bar.bad i b{background:#ff4f7b}
 [data-skin="brutal"] .bar:not(.ok):not(.warn):not(.bad) i b{background:#ff6fb5}
 @media (prefers-reduced-motion:reduce){[data-skin="brutal"] .stat:hover{transform:none}}
+
+/* ---- skin: Monad night (deep purple from monad.xyz, soft pink accent) ---- */
+:root[data-skin="monad"]{
+  color-scheme:dark;
+  --bg:#0e091c;--bg-alt:#0e091c;--panel:#160b30;--hover:#21104a;
+  --line:#2e1d5c;--line-strong:#3c2a78;
+  --fg:#fbfaf9;--fg-2:#e4e0f7;--muted:#afa9ec;--faint:#7f77dd;
+  --green:#5dcaa5;--green-soft:#10302b;--amber:#efb45a;--amber-soft:#33240f;--red:#ffa1a1;--red-soft:#3a1626;
+  --btn:#836ef9;--btn-fg:#ffffff;--topbar:rgba(14,9,28,.82);
+  --shadow:0 0 0 1px rgba(131,110,249,.10),0 16px 40px rgba(0,0,0,.45);
+  --bw:1px;--r-card:14px;--r-ctl:10px;--r-tag:999px;--r-nav:999px;--r-bar:999px;--bar-h:5px;
+}
+[data-skin="monad"] body{background:radial-gradient(1200px 520px at 50% -120px,#25043a 0%,rgba(14,9,28,0) 70%) no-repeat,#0e091c}
+[data-skin="monad"] .stat{background:linear-gradient(180deg,#1b0d3a,#160b30)}
+[data-skin="monad"] .stat .v{color:#ffffff}
+[data-skin="monad"] .welcome{border-left-color:#836ef9;background:linear-gradient(90deg,#1e0c44,#160b30)}
+[data-skin="monad"] .sections a.active{background:#25124f;color:#ffffff}
+[data-skin="monad"] .bar.ok i b{background:linear-gradient(90deg,#836ef9,#5dcaa5)}
+[data-skin="monad"] .pill-ok{background:#10302b}
+[data-skin="monad"] button:not(.ghost):hover,[data-skin="monad"] a.welcome-btn:hover{box-shadow:0 0 0 4px rgba(131,110,249,.25)}
 </style>
 </head>
 <body>
@@ -431,7 +451,7 @@ addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimat
 highlightSection();
 
 // skins: each one is a block of CSS variables keyed on <html data-skin>; the button cycles through them
-const SKIN_NAMES = { clean: "Clean", kawaii: "Kawaii", brutal: "Brutal" };
+const SKIN_NAMES = { clean: "Clean", kawaii: "Kawaii", brutal: "Brutal", monad: "Monad night" };
 const skins = document.documentElement.dataset.skins.split(" ");
 function showSkin() { $("skinName").textContent = SKIN_NAMES[document.documentElement.dataset.skin] ?? document.documentElement.dataset.skin; }
 showSkin();
