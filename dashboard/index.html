@@ -364,8 +364,10 @@ function metrics(base, mark) {
   const { pd, dir, size, entry, coll, mm } = base;
   const notional = size * mark, upnl = (mark - entry) * size * dir, equity = coll + upnl;
   const denom = size * (dir - mm);
-  const liq = denom !== 0 ? (entry * size * dir - coll) / denom : NaN;
-  const dist = Number.isFinite(liq) && liq > 0 ? Math.abs(mark - liq) / mark : NaN;
+  // A fully collateralised long (1x) has no liquidation price: the formula lands at or below zero.
+  const raw = denom !== 0 ? (entry * size * dir - coll) / denom : NaN;
+  const liq = Number.isFinite(raw) && raw > entry * 1e-3 ? raw : NaN;
+  const dist = Number.isFinite(liq) ? Math.abs(mark - liq) / mark : NaN;
   const marginRatio = notional > 0 ? equity / notional : NaN;
   const lossPct = coll > 0 ? (-upnl / coll) * 100 : 0;
   const alerts = [];
@@ -409,8 +411,8 @@ function renderPositions(positions) {
       <td><strong>${esc(p.market)}</strong></td><td><span class="side ${p.side}">${p.side}</span></td>
       <td>${fmt(p.size, p.ld)}</td><td>${fmt(p.entry, p.pd)}</td><td>${fmt(p.mark, p.pd)}</td><td>${fmt(p.notional)}</td><td>${fmt(p.coll)}</td>
       <td>${fmt(p.lev, 1)}x</td><td class="${cls(p.upnl)}">${fmtSigned(p.upnl)} <small>(${fmtSigned(p.upnlPct, 1)}%)</small></td>
-      <td>${fmt(p.marginRatio, 3)}</td><td>${fmt(p.mm * 100, 1)}%</td><td>${fmt(p.liq, p.pd)}</td>
-      <td><span class="bar ${level}"><i><b style="width:${width}%"></b></i>${fmt(d, 1)}%</span></td></tr>`;
+      <td>${fmt(p.marginRatio, 3)}</td><td>${fmt(p.mm * 100, 1)}%</td><td>${Number.isFinite(p.liq) ? fmt(p.liq, p.pd) : "none"}</td>
+      <td>${Number.isFinite(d) ? `<span class="bar ${level}"><i><b style="width:${width}%"></b></i>${fmt(d, 1)}%</span>` : `<small>no liquidation</small>`}</td></tr>`;
   }).join("");
 }
 
