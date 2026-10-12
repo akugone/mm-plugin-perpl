@@ -577,7 +577,7 @@ function renderSim() {
       <td class="${cls(loss({ p, s, liquidated }))}">${fmtSigned(liquidated ? -p.coll : s.upnl)}</td>
       <td>${liquidated ? "—" : fmt(s.marginRatio, 3)}</td>
       <td>${liquidated ? "passed" : Number.isFinite(d) ? fmt(d, 1) + "%" : "no liquidation"}</td>
-      <td style="text-align:left">${status}</td></tr>`;
+      <td>${status}</td></tr>`;
   }).join("");
 }
 $("simShock").oninput = (e) => { sim.shock = Number(e.target.value); renderSim(); };
