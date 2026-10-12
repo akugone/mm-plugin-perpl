@@ -173,14 +173,20 @@ reports `creditsSpent` from Nansen's response headers.
 **[perpl-agent-monitor.vercel.app](https://perpl-agent-monitor.vercel.app/)**: Perpl Agent Monitor, in a soft black-and-white UI (light and dark). The agent trades
 through `mm perpl`; the human watches here, without a terminal. For any wallet (`?address=0x…`, Monad Testnet or
 Monad): equity, free and posted collateral, open positions with PnL, margin ratio, maintenance margin, estimated
-liquidation price and distance, alerts with the same thresholds as `mm perpl risk`, the account's activity
-(account created, deposits, opens, closes, liquidations, with explorer links) and every market's mark, open interest,
-funding and margin parameters. Refreshes every 5 s.
+liquidation price and distance, alerts with the same thresholds as `mm perpl risk`, and the account's activity
+(account created, deposits, opens, closes, liquidations, with explorer links). Refreshes every 5 s.
+
+- **Stress test**: a price slider (−90% to +90%, one market or all) re-runs the risk maths on the live positions and
+  shows the simulated PnL, margin ratio, liquidation distance, alerts, liquidations and equity after the move.
+  Simulation only, nothing is sent.
+- **Protocol view**: AUSD held by the exchange, total open interest, insurance funds, and per market its share of open
+  interest, insurance fund, resting orders, funding and margin parameters, with the watched account's share next to it.
 
 Everything is read from the Perpl Exchange contract through the public Monad RPC (`getAccountByAddr`, `getPosition`,
-`getPerpetualInfoV2`, `getMarginFractions`, events): no API key, no backend, nothing stored. Perpl's events don't index
-the account, and the public RPC caps `eth_getLogs` at 100 blocks, so the activity feed scans the last ~20 minutes
-then stays live; `?from=<block>` scans further back. Single
+`getPerpetualInfoV2`, `getMarginFractions`, `getExchangeInfo`, events): no API key, no backend, nothing stored. Perpl's
+events don't index the account, and the public RPC caps `eth_getLogs` at 100 blocks, so the activity feed scans the last
+~20 minutes then stays live, plus the block each open position was opened in, so its opening trade always shows;
+`?from=<block>` scans further back. Single
 static file: `dashboard/index.html`, deployed on Vercel (`cd dashboard && vercel deploy --prod`).
 
 ## Risk monitoring from cron
